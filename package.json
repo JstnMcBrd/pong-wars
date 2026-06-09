@@ -5,9 +5,15 @@
   "type": "module",
   "scripts": {
     "type-check": "tsc --noEmit",
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "npm run dev:wasm && vite",
+    "dev:wasm": "wasm-pack build physics-wasm --profiling",
+    "build": "npm run build:wasm && tsc && vite build",
+    "build:wasm": "wasm-pack build physics-wasm",
     "preview": "vite preview"
+  },
+  "dependencies": {
+    "physics-wasm": "file:./physics-wasm/pkg",
+    "vite-plugin-wasm": "^3.6.0"
   },
   "devDependencies": {
     "typescript": "^6.0.3",

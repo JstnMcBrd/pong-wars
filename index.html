@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pong Wars</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <div id="controls">
+      <!-- Idle state -->
+      <button id="btn-start">Start</button>
+      <button id="btn-settings" aria-label="Settings">⚙</button>
+
+      <!-- Running state (hidden initially) -->
+      <button id="btn-stop"   hidden>Stop</button>
+      <button id="btn-pause"  hidden>Pause</button>
+
+      <!-- Paused state — replaces Pause (hidden initially) -->
+      <button id="btn-resume" hidden>Resume</button>
+
+      <!-- Settings popup (anchored inside #controls) -->
+      <div id="settings-popup" class="hidden" role="dialog" aria-label="Settings">
+
+        <div class="setting-row">
+          <label>
+            <span class="setting-label">Teams</span>
+            <span class="setting-value" id="val-teams">?</span>
+          </label>
+          <input type="range" id="inp-teams" min="?" max="?" value="?"/>
+        </div>
+
+        <div class="setting-row">
+          <label>
+            <span class="setting-label">Grid Size</span>
+            <span class="setting-value" id="val-size">?x?</span>
+          </label>
+          <input type="range" id="inp-size" min="?" max="?" value="?"/>
+        </div>
+
+        <div class="setting-row">
+          <label>
+            <span class="setting-label">Speed (ticks/frame)</span>
+            <span class="setting-value" id="val-speed">?</span>
+          </label>
+          <input type="range" id="inp-speed" min="?" max="?" value="?"/>
+        </div>
+
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

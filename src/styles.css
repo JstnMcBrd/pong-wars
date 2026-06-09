@@ -1,0 +1,124 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --pad: 16px;
+  --controls-h: 32px;
+  --canvas-size: min(
+    calc(100dvh - 2 * var(--pad) - var(--pad) - var(--controls-h)),
+    calc(100vw  - 2 * var(--pad))
+  );
+}
+
+body {
+  background: #0d0d0d;
+  color: #e0e0e0;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+  gap: var(--pad);
+  overflow: hidden;
+}
+
+#canvas {
+  display: block;
+  width: var(--canvas-size);
+  height: var(--canvas-size);
+}
+
+/* ── Controls bar ─────────────────────────────────────────────────────────── */
+
+#controls {
+  position: relative; /* anchor for #settings-popup */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.25rem;
+  width: var(--canvas-size);
+  height: var(--controls-h);
+}
+
+/* Generic button style */
+#controls button {
+  padding: 0.45rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+#controls button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Settings cog — pushed to the far right */
+#btn-settings {
+  margin-left: auto;
+  font-size: 1.1rem;
+  padding: 0.45rem 0.7rem !important;
+}
+
+/* ── Settings popup ───────────────────────────────────────────────────────── */
+
+#settings-popup {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: rgba(15, 15, 25, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem 1.25rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  z-index: 50;
+}
+
+#settings-popup.hidden {
+  display: none;
+}
+
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.setting-row label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.setting-label {
+  font-size: 0.8rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.setting-value {
+  font-size: 0.85rem;
+  color: #e0e0e0;
+  font-variant-numeric: tabular-nums;
+}
+
+.setting-row input[type='range'] {
+  width: 100%;
+  accent-color: hsl(200, 70%, 55%);
+  cursor: pointer;
+}

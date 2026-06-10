@@ -10,11 +10,7 @@ const BOUNDS = {
   numTeams:      { min: 2 },
   gridSize:      { min: 10, max: 500 },
   ticksPerFrame: { min: 1,  max: 500 },
-} satisfies {
-  numTeams:      { min: number };
-  gridSize:      { min: number; max: number };
-  ticksPerFrame: { min: number; max: number };
-};
+} satisfies Record<keyof typeof DEFAULTS, { min: number; max?: number }>;
 
 function computeMaxTeams(gridSize: number): number {
   const circumference = Math.PI * 2 * (gridSize / 4);

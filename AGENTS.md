@@ -30,7 +30,7 @@ main.ts  ────[reset / tick]──────► worker.ts
                                       │    tick_n(n)
                                       │    get_grid()           → Uint16Array
                                       │    get_ball_positions() → Float32Array
-    ◄──[frame: grid, cols, rows, balls]──┘  (transferred zero-copy)
+ ◄──[frame: grid, cols, rows, balls]──┘  (transferred zero-copy)
 canvas.ts  draws frame
 ```
 

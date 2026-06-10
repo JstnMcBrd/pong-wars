@@ -127,8 +127,6 @@ impl Simulation {
                 self.grid[idx] = team;
             }
         }
-
-        
     }
 
     fn tick(&mut self) {

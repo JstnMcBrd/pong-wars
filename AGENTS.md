@@ -7,13 +7,22 @@ Keep `AGENTS.md` and `README.md` up-to-date whenever you modify the project.
 ## Commands
 
 ```bash
+# Full project
 npm install         # Install JS dependencies
-npm run type-check  # Type-check TypeScript
-npm run fmt         # Format (cargo fmt + oxfmt)
-npm run lint        # Lint (cargo clippy + oxlint)
 npm run dev         # Dev server (builds Wasm first, then starts Vite)
 npm run build       # Production build
 npm run preview     # Preview production build
+
+# UI
+npm run fmt         # Format
+npm run lint        # Lint
+npm run check       # Type-check
+
+# Physics worker
+cd physics-wasm
+cargo fmt           # Format
+cargo clippy        # Lint
+cargo check         # Compile-check
 ```
 
 There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any build that touches the Wasm crate.
@@ -61,4 +70,5 @@ All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts t
 
 ## Deployment
 
+`.github/workflows/ci.yml` runs checks on every PR and every push to `main`.
 `.github/workflows/cd.yml` deploys to GitHub Pages on every push to `main`.

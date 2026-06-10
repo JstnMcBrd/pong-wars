@@ -4,12 +4,12 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "type-check": "tsc --noEmit",
-    "fmt": "cargo fmt --manifest-path physics-wasm/Cargo.toml && oxfmt",
-    "lint": "cargo clippy --manifest-path physics-wasm/Cargo.toml && oxlint",
     "dev": "wasm-pack build physics-wasm --profiling && vite",
     "build": "wasm-pack build physics-wasm && tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "fmt": "oxfmt",
+    "lint": "oxlint",
+    "check": "tsc"
   },
   "dependencies": {
     "physics-wasm": "file:./physics-wasm/pkg",

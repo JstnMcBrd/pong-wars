@@ -14,7 +14,7 @@ npm run build       # Production build
 npm run preview     # Preview production build
 ```
 
-There are no tests. `wasm-pack` and the Rust `wasm32-unknown-unknown` target must be installed for any build that touches the Wasm crate.
+There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any build that touches the Wasm crate.
 
 ## Architecture
 
@@ -53,3 +53,10 @@ All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts t
 
 `tsconfig.json` enables a large set of strict checks. Ensure correctness by type-checking after edits.
 
+### Vite base path
+
+`vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment. Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically. Hardcoded URL strings in JS/TS are not rewritten and will break under the subpath.
+
+## Deployment
+
+`.github/workflows/cd.yml` deploys to GitHub Pages on every push to `main`.

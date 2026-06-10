@@ -88,6 +88,10 @@ jobs:
       - name: Install dependencies
         run: npm clean-install
 
+        # Need to generate type definitions before type-checking
+      - name: Generate WebAssembly bindings
+        run: npx wasm-pack build physics-wasm --dev
+
       - name: Check TypeScript
         run: npm run check
 

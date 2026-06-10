@@ -13,11 +13,11 @@ More balls, more squares, more speed!
 ## Architecture
 
 - **Front-end**
-    - Uses TypeScript + Vite, transpiles to pure HTML/CSS/JS for the browser
-    - Paints the grid to the canvas every frame
+  - Uses TypeScript + Vite, transpiles to pure HTML/CSS/JS for the browser
+  - Paints the grid to the canvas every frame
 - **Physics Worker**
-    - Written in Rust, compiles to Wasm
-    - Runs in a Web Worker so physics never blocks the main thread
-    - Supports any number of ticks per frame for turbo-speed simulation
+  - Written in Rust, compiles to Wasm
+  - Runs in a Web Worker so physics never blocks the main thread
+  - Supports any number of ticks per frame for turbo-speed simulation
 
 The separation between rendering and physics enables blindly fast simulation speeds!

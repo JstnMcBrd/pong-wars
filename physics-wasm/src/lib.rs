@@ -1,6 +1,6 @@
-use wasm_bindgen::prelude::*;
-use js_sys::Uint16Array;
 use js_sys::Float32Array;
+use js_sys::Uint16Array;
+use wasm_bindgen::prelude::*;
 
 /// Fraction of a cell that the ball moves per tick.
 /// Must be < 0.5 to guarantee no cell skipping.
@@ -64,21 +64,27 @@ impl Simulation {
     }
 
     /// Return a view of the grid as a flat `Uint16Array`.
-    /// 
+    ///
     /// Layout: `grid[col + row * grid_cols] = team index`.
-    /// 
-    /// UNSAFE: provides direct access into wasm's linear memory.
-    /// The caller **must** clone/copy the view to transfer across worker threads.
+    ///
+    /// # Safety
+    ///
+    /// Provides a direct view into Wasm linear memory. The caller must not hold
+    /// this view across any Rust call that could reallocate the backing `Vec`.
+    /// Copy the data out before passing it between threads.
     pub unsafe fn get_grid(&self) -> Uint16Array {
         unsafe { Uint16Array::view(&self.grid) }
     }
 
     /// Return a view of all ball positions as a flat `Float32Array`.
-    /// 
+    ///
     /// Layout: `[x_0, y_0, x_1, y_1, …]` in grid-space units.
-    /// 
-    /// UNSAFE: provides direct access into wasm's linear memory.
-    /// The caller **must** clone/copy the view to transfer across worker threads.
+    ///
+    /// # Safety
+    ///
+    /// Provides a direct view into Wasm linear memory. The caller must not hold
+    /// this view across any Rust call that could reallocate the backing `Vec`.
+    /// Copy the data out before passing it between threads.
     pub unsafe fn get_ball_positions(&self) -> Float32Array {
         unsafe { Float32Array::view(&self.ball_positions) }
     }
@@ -107,7 +113,7 @@ impl Simulation {
             self.ball_positions[x_idx] = cx + r * cos;
             self.ball_positions[y_idx] = cy + r * sin;
 
-            self.ball_directions[x_idx] = if sin <  0.0 { 1.0 } else { -1.0 };
+            self.ball_directions[x_idx] = if sin < 0.0 { 1.0 } else { -1.0 };
             self.ball_directions[y_idx] = if cos >= 0.0 { 1.0 } else { -1.0 };
         }
 
@@ -121,8 +127,9 @@ impl Simulation {
                 let dx = col as f32 + 0.5 - cx;
                 let dy = row as f32 + 0.5 - cy;
 
-                let phi = (dy.atan2(dx).rem_euclid(std::f32::consts::TAU) + half_sector) % std::f32::consts::TAU;
-                
+                let phi = (dy.atan2(dx).rem_euclid(std::f32::consts::TAU) + half_sector)
+                    % std::f32::consts::TAU;
+
                 let team = (phi / std::f32::consts::TAU * nf) as u16;
                 self.grid[idx] = team;
             }

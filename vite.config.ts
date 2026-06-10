@@ -1,11 +1,11 @@
-import { defineConfig } from 'vite';
-import wasm from 'vite-plugin-wasm';
+import { defineConfig } from "vite";
+import wasm from "vite-plugin-wasm";
 
 export default defineConfig({
-  base: '/pong-wars/',
+  base: "/pong-wars/",
   plugins: [wasm()],
   worker: {
-    format: 'es',
+    format: "es",
     plugins: () => [wasm()],
   },
 });

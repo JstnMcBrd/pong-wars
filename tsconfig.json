@@ -17,6 +17,6 @@
     "noEmit": true,
 
     "lib": ["ESNext", "DOM"],
-    "target": "esnext",
+    "target": "esnext"
   }
 }

@@ -7,10 +7,7 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+permissions: {}
 
 # Only allow one deployment at a time
 concurrency:
@@ -22,6 +19,9 @@ jobs:
     name: Build
 
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # Required for actions/checkout
 
     steps:
       - name: Checkout repository
@@ -55,6 +55,10 @@ jobs:
     needs: build
 
     runs-on: ubuntu-latest
+
+    permissions:
+      pages: write # Required for actions/deploy-pages
+      id-token: write # Required for actions/deploy-pages
 
     environment:
       name: github-pages

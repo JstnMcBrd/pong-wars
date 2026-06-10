@@ -27,16 +27,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Install Rust toolchain
+        run: rustup target add wasm32-unknown-unknown
+
       - name: Setup node
         uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: npm
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
 
       - name: Install dependencies
         run: npm clean-install

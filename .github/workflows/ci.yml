@@ -1,0 +1,123 @@
+name: CI
+# Formats, lints, checks, and builds the project whenever a pull request is opened or merged
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  format:
+    name: Format
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # Required for actions/checkout
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm clean-install
+
+      - name: Format TypeScript
+        run: npm run fmt -- --check
+
+      - name: Format Rust
+        working-directory: physics-wasm
+        run: cargo fmt --check
+
+  lint:
+    name: Lint
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # Required for actions/checkout
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm clean-install
+
+      - name: Lint TypeScript
+        run: npm run lint
+
+      - name: Lint Rust
+        working-directory: physics-wasm
+        run: cargo clippy -- -D warnings
+
+  check:
+    name: Check
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # Required for actions/checkout
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm clean-install
+
+      - name: Check TypeScript
+        run: npm run check
+
+      - name: Check Rust
+        working-directory: physics-wasm
+        run: cargo check
+
+  build:
+    name: Build
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # Required for actions/checkout
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm clean-install
+
+      - name: Build
+        run: npm run build

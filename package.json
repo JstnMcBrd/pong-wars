@@ -1,0 +1,22 @@
+{
+  "name": "pong-wars",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "dev": "npm run dev:wasm && vite",
+    "dev:wasm": "wasm-pack build physics-wasm --profiling",
+    "build": "npm run build:wasm && tsc && vite build",
+    "build:wasm": "wasm-pack build physics-wasm",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "physics-wasm": "file:./physics-wasm/pkg",
+    "vite-plugin-wasm": "^3.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  }
+}

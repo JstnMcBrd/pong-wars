@@ -55,7 +55,7 @@ All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts t
 
 ### Vite base path
 
-`vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment. Asset URLs in code must be root-relative (`/src/…`) not bare relative paths, or Vite will handle them correctly via `import`.
+`vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment. Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically. Hardcoded URL strings in JS/TS are not rewritten and will break under the subpath.
 
 ## Deployment
 

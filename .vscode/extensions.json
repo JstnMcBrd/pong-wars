@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "rust-lang.rust-analyzer",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "oxc.oxc-vscode"
     ]
 }

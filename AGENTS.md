@@ -9,6 +9,8 @@ Keep `AGENTS.md` and `README.md` up-to-date whenever you modify the project.
 ```bash
 npm install         # Install JS dependencies
 npm run type-check  # Type-check TypeScript
+npm run fmt         # Format (cargo fmt + oxfmt)
+npm run lint        # Lint (cargo clippy + oxlint)
 npm run dev         # Dev server (builds Wasm first, then starts Vite)
 npm run build       # Production build
 npm run preview     # Preview production build

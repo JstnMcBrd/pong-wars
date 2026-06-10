@@ -1,4 +1,6 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -9,7 +11,7 @@
   --controls-h: 32px;
   --canvas-size: min(
     calc(100dvh - 2 * var(--pad) - var(--pad) - var(--controls-h)),
-    calc(100vw  - 2 * var(--pad))
+    calc(100vw - 2 * var(--pad))
   );
 }
 
@@ -117,7 +119,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.setting-row input[type='range'] {
+.setting-row input[type="range"] {
   width: 100%;
   accent-color: hsl(200, 70%, 55%);
   cursor: pointer;

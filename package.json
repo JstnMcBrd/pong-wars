@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "fmt": "oxfmt",
     "lint": "oxlint",
-    "type-check": "tsc"
+    "check": "tsc"
   },
   "dependencies": {
     "physics-wasm": "file:./physics-wasm/pkg",

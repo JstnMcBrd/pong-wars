@@ -16,13 +16,13 @@ npm run preview     # Preview production build
 # UI
 npm run fmt         # Format
 npm run lint        # Lint
-npm run type-check  # Type-check TypeScript
+npm run check       # Type-check
 
 # Physics worker
 cd physics-wasm
 cargo fmt           # Format
 cargo clippy        # Lint
-cargo check         # Compile
+cargo check         # Compile-check
 ```
 
 There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any build that touches the Wasm crate.

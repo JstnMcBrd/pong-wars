@@ -1,5 +1,5 @@
 [package]
-name = "physics-wasm"
+name = "worker"
 license = "MIT"
 edition = "2024"
 

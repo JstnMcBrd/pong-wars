@@ -18,8 +18,8 @@ npm run fmt         # Format
 npm run lint        # Lint
 npm run check       # Type-check
 
-# Physics worker
-cd physics-wasm
+# Worker
+cd worker
 cargo fmt           # Format
 cargo clippy        # Lint
 cargo check         # Compile-check
@@ -37,7 +37,7 @@ A browser-based multi-ball pong simulation where each ball paints the grid with 
 main thread                       Web Worker
 ──────────────────────────────    ──────────────────────────────
 main.ts  ────[reset / tick]──────► worker.ts
-                                      │  Rust Simulation (physics-wasm)
+                                      │  Rust Simulation (worker)
                                       │    tick_n(n)
                                       │    get_grid()           → Uint16Array
                                       │    get_ball_positions() → Float32Array
@@ -50,7 +50,7 @@ canvas.ts  draws frame
 - `controls.ts` — `Controls` singleton. Owns `SimState` (`preview | running | paused`), transitions it on button clicks, exposes a readonly `state` getter, and surfaces `onStart(cb)` / `onStop(cb)` hooks.
 - `canvas.ts` — `Canvas` singleton. Renders frames via a 1px-per-cell `OffscreenCanvas` scaled up with `drawImage`. A `ResizeObserver` syncs buffer resolution with the CSS-rendered size and redraws on resize. `draw(grid, cols, rows, balls)` reconfigures the offscreen canvas and team colors lazily when dimensions or team count change.
 - `settings.ts` — `Settings` singleton. Exposes `numTeams`, `gridSize`, `ticksPerFrame` as DOM-backed getters (reading slider values directly). Bounds and defaults in module-level `BOUNDS` / `DEFAULTS` constants. Provides `lock()`, `unlock()`, and `onChange(cb)`.
-- `physics-wasm/src/lib.rs` — the physics engine. `Simulation` stores grid, positions, and directions as flat `Vec`s in grid-space. Each tick: move → wall-bounce → cell-collision.
+- `worker/src/lib.rs` — the physics engine. `Simulation` stores grid, positions, and directions as flat `Vec`s in grid-space. Each tick: move → wall-bounce → cell-collision.
 
 ### Canvas sizing
 

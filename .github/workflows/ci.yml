@@ -36,7 +36,7 @@ jobs:
         run: npm run fmt -- --check
 
       - name: Format Rust
-        working-directory: physics-wasm
+        working-directory: worker
         run: cargo fmt --check
 
   lint:
@@ -64,7 +64,7 @@ jobs:
         run: npm run lint
 
       - name: Lint Rust
-        working-directory: physics-wasm
+        working-directory: worker
         run: cargo clippy -- -D warnings
 
   check:
@@ -90,13 +90,13 @@ jobs:
 
         # Need to generate type definitions before type-checking
       - name: Generate WebAssembly bindings
-        run: npx wasm-pack build physics-wasm --dev
+        run: npx wasm-pack build worker --dev
 
       - name: Check TypeScript
         run: npm run check
 
       - name: Check Rust
-        working-directory: physics-wasm
+        working-directory: worker
         run: cargo check
 
   build:

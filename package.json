@@ -4,16 +4,16 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "wasm-pack build physics-wasm --profiling && vite",
-    "build": "wasm-pack build physics-wasm && tsc && vite build",
+    "dev": "wasm-pack build worker --profiling && vite",
+    "build": "wasm-pack build worker && tsc && vite build",
     "preview": "vite preview",
     "fmt": "oxfmt",
     "lint": "oxlint",
     "check": "tsc"
   },
   "dependencies": {
-    "physics-wasm": "file:./physics-wasm/pkg",
-    "vite-plugin-wasm": "^3.6.0"
+    "vite-plugin-wasm": "^3.6.0",
+    "worker": "file:./worker/pkg"
   },
   "devDependencies": {
     "oxfmt": "^0.54.0",

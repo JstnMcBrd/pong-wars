@@ -1,5 +1,5 @@
 /**
- * Physics Worker — thin wrapper around the Rust/Wasm Simulation.
+ * Worker interface — thin wrapper around the Rust/Wasm Simulation.
  *
  * For the bundler target, wasm-bindgen initializes the Wasm module
  * automatically when the ES module is imported, so no explicit init()
@@ -22,7 +22,7 @@
  * The Worker never needs to know about canvas pixels or window dimensions.
  */
 
-import { Simulation } from "physics-wasm";
+import { Simulation } from "worker";
 
 let cols = 0;
 let rows = 0;

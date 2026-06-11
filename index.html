@@ -12,32 +12,17 @@
 
     <div id="controls">
       <!-- Idle state -->
-      <button id="btn-start" aria-label="Play">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-          <polygon points="2,1 13,7 2,13" />
-        </svg>
-      </button>
-      <button id="btn-settings" aria-label="Settings">⚙</button>
+      <button id="btn-start" aria-label="Play"><i data-lucide="play"></i></button>
 
       <!-- Running state (hidden initially) -->
-      <button id="btn-stop" hidden aria-label="Stop">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-          <rect x="1" y="1" width="12" height="12" />
-        </svg>
-      </button>
-      <button id="btn-pause" hidden aria-label="Pause">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-          <rect x="1" y="1" width="4" height="12" />
-          <rect x="9" y="1" width="4" height="12" />
-        </svg>
-      </button>
+      <button id="btn-stop" hidden aria-label="Stop"><i data-lucide="square"></i></button>
+      <button id="btn-pause" hidden aria-label="Pause"><i data-lucide="pause"></i></button>
 
       <!-- Paused state — replaces Pause (hidden initially) -->
-      <button id="btn-resume" hidden aria-label="Play">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-          <polygon points="2,1 13,7 2,13" />
-        </svg>
-      </button>
+      <button id="btn-resume" hidden aria-label="Play"><i data-lucide="play"></i></button>
+
+      <!-- Settings button — margin-left: auto pushes it to the far right -->
+      <button id="btn-settings" aria-label="Settings"><i data-lucide="settings"></i></button>
 
       <!-- Settings popup (anchored inside #controls) -->
       <div id="settings-popup" class="hidden" role="dialog" aria-label="Settings">

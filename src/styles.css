@@ -59,7 +59,6 @@ body {
   cursor: pointer;
   transition: background 0.15s;
   white-space: nowrap;
-  font-variant-emoji: text;
 }
 
 #controls button:hover {

@@ -73,8 +73,6 @@ body {
 /* Settings cog — pushed to the far right */
 #btn-settings {
   margin-left: auto;
-  font-size: 1.1rem;
-  padding: 0.45rem 0.7rem !important;
 }
 
 /* ── Settings popup ───────────────────────────────────────────────────────── */

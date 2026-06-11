@@ -65,6 +65,11 @@ body {
   background: rgba(255, 255, 255, 0.18);
 }
 
+#controls button svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* Settings cog — pushed to the far right */
 #btn-settings {
   margin-left: auto;

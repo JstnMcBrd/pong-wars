@@ -1,8 +1,12 @@
 import "./styles.css";
+import { createIcons, Pause, Play, Settings, Square } from "lucide";
+
 import { canvas } from "./canvas.js";
 import { controls } from "./controls.js";
 import { settings } from "./settings.js";
 import type { WorkerMessage, WorkerReply } from "./worker.js";
+
+createIcons({ icons: { Pause, Play, Settings, Square } });
 
 // ── Simulation Worker ──────────────────────────────────────────────────────
 

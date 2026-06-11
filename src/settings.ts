@@ -2,7 +2,7 @@
 
 const DEFAULTS = {
   numTeams: 2,
-  gridSize: 30,
+  gridSize: 26,
   ticksPerFrame: 1,
 };
 

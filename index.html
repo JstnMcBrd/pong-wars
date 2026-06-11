@@ -12,15 +12,15 @@
 
     <div id="controls">
       <!-- Idle state -->
-      <button id="btn-start">Start</button>
+      <button id="btn-start" aria-label="Play">▶︎</button>
       <button id="btn-settings" aria-label="Settings">⚙</button>
 
       <!-- Running state (hidden initially) -->
-      <button id="btn-stop" hidden>Stop</button>
-      <button id="btn-pause" hidden>Pause</button>
+      <button id="btn-stop" hidden aria-label="Stop">⏹︎</button>
+      <button id="btn-pause" hidden aria-label="Pause">⏸︎</button>
 
       <!-- Paused state — replaces Pause (hidden initially) -->
-      <button id="btn-resume" hidden>Resume</button>
+      <button id="btn-resume" hidden aria-label="Play">▶︎</button>
 
       <!-- Settings popup (anchored inside #controls) -->
       <div id="settings-popup" class="hidden" role="dialog" aria-label="Settings">

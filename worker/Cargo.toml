@@ -1,5 +1,7 @@
 [package]
 name = "worker"
+description = "Rust/Wasm physics engine for pong-wars"
+repository = "https://github.com/JstnMcBrd/pong-wars"
 license = "MIT"
 edition = "2024"
 

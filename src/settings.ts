@@ -65,15 +65,10 @@ class Settings {
     this.changeCb = cb;
   }
 
-  /** Hide the settings button and close the popup. */
-  public lock(): void {
-    this.btnSettings.hidden = true;
-    this.popup.classList.add("hidden");
-  }
-
-  /** Show the settings button. */
-  public unlock(): void {
-    this.btnSettings.hidden = false;
+  /** Disable reset-required settings (gridSize, numTeams) while the simulation runs. */
+  public setRunning(running: boolean): void {
+    this.inpTeams.disabled = running;
+    this.inpSize.disabled = running;
   }
 
   // ── Private setup ─────────────────────────────────────────────────────────

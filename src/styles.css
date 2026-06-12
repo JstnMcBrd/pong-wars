@@ -132,3 +132,11 @@ body {
   accent-color: hsl(200, 70%, 55%);
   cursor: pointer;
 }
+
+.setting-row:has(input:disabled) {
+  opacity: 0.45;
+}
+
+.setting-row input[type="range"]:disabled {
+  cursor: not-allowed;
+}

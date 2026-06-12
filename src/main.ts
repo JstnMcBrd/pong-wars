@@ -45,12 +45,12 @@ settings.onChange(() => {
 });
 
 controls.onStart(() => {
-  settings.lock();
+  settings.setRunning(true);
 });
 
 controls.onStop(() => {
   resetWorker();
-  settings.unlock();
+  settings.setRunning(false);
 });
 
 // ── Animation loop ─────────────────────────────────────────────────────────

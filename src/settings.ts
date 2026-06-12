@@ -29,7 +29,7 @@ class Settings {
   private readonly inpSpeed: HTMLInputElement;
   private readonly valSpeed: HTMLSpanElement;
 
-  private changeCb: (() => void) | null = null;
+  private resetCb: (() => void) | null = null;
 
   constructor() {
     this.popup = document.getElementById("settings-popup") as HTMLDivElement;
@@ -60,9 +60,9 @@ class Settings {
 
   // ── Public methods ────────────────────────────────────────────────────────
 
-  /** Register a callback invoked when a setting changes that requires a simulation reset. */
-  public onChange(cb: () => void): void {
-    this.changeCb = cb;
+  /** Register a callback invoked when a setting change requires a simulation reset. */
+  public onResetRequired(cb: () => void): void {
+    this.resetCb = cb;
   }
 
   /** Disable reset-required settings (gridSize, numTeams) while the simulation runs. */
@@ -128,13 +128,13 @@ class Settings {
         // But if that happens, we need to update the UI and trigger the change callback.
         this.inpTeams.dispatchEvent(new Event("input"));
       } else {
-        this.changeCb?.();
+        this.resetCb?.();
       }
     });
 
     this.inpTeams.addEventListener("input", () => {
       this.valTeams.textContent = this.inpTeams.value;
-      this.changeCb?.();
+      this.resetCb?.();
     });
 
     this.inpSpeed.addEventListener("input", () => {

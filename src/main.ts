@@ -40,7 +40,7 @@ function resetWorker(): void {
 
 // ── Orchestration ──────────────────────────────────────────────────────────
 
-settings.onChange(() => {
+settings.onResetRequired(() => {
   resetWorker();
 });
 

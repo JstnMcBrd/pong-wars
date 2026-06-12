@@ -49,7 +49,7 @@ canvas.ts  draws frame
 - `worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
 - `controls.ts` — `Controls` singleton. Owns `SimState` (`preview | running | paused`), transitions it on button clicks, exposes a readonly `state` getter, and surfaces `onStart(cb)` / `onStop(cb)` hooks.
 - `canvas.ts` — `Canvas` singleton. Renders frames via a 1px-per-cell `OffscreenCanvas` scaled up with `drawImage`. A `ResizeObserver` syncs buffer resolution with the CSS-rendered size and redraws on resize. `draw(grid, cols, rows, balls)` reconfigures the offscreen canvas and team colors lazily when dimensions or team count change.
-- `settings.ts` — `Settings` singleton. Exposes `numTeams`, `gridSize`, `ticksPerFrame` as DOM-backed getters (reading slider values directly). Bounds and defaults in module-level `BOUNDS` / `DEFAULTS` constants. Provides `lock()`, `unlock()`, and `onChange(cb)`.
+- `settings.ts` — `Settings` singleton. Exposes `numTeams`, `gridSize`, `ticksPerFrame` as DOM-backed getters (reading slider values directly). Bounds and defaults in module-level `BOUNDS` / `DEFAULTS` constants. Provides `setRunning(running)` (disables reset-required inputs during a run) and `onResetRequired(cb)` (fires when a setting change requires a simulation reset).
 - `worker/src/lib.rs` — the physics engine. `Simulation` stores grid, positions, and directions as flat `Vec`s in grid-space. Each tick: move → wall-bounce → cell-collision.
 
 ### Canvas sizing

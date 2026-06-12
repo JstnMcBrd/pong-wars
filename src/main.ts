@@ -40,17 +40,17 @@ function resetWorker(): void {
 
 // ── Orchestration ──────────────────────────────────────────────────────────
 
-settings.onChange(() => {
+settings.onResetRequired(() => {
   resetWorker();
 });
 
 controls.onStart(() => {
-  settings.lock();
+  settings.setRunning(true);
 });
 
 controls.onStop(() => {
   resetWorker();
-  settings.unlock();
+  settings.setRunning(false);
 });
 
 // ── Animation loop ─────────────────────────────────────────────────────────

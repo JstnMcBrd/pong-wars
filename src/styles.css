@@ -13,10 +13,14 @@
 
 :root {
   --pad: 16px;
-  --controls-h: 32px;
+  --gap: 16px;
+  --panel-w: 17rem; /* panel width when side-by-side */
+  --panel-h: 14rem; /* panel height when stacked */
+
+  /* Stacked layout (default): canvas above, panel below. */
   --canvas-size: min(
-    calc(100dvh - 3 * var(--pad) - var(--controls-h)),
-    calc(100vw - 2 * var(--pad))
+    calc(100vw - 2 * var(--pad)),
+    calc(100dvh - 2 * var(--pad) - var(--gap) - var(--panel-h))
   );
 }
 
@@ -27,12 +31,18 @@ body {
   font-size: 14px;
   height: 100dvh;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: var(--pad);
-  gap: var(--pad);
-  overflow: hidden;
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gap);
 }
 
 #canvas {
@@ -41,15 +51,41 @@ body {
   height: var(--canvas-size);
 }
 
-/* ── Controls bar ─────────────────────────────────────────────────────────── */
+/* Side-by-side layout: canvas left, panel right, stretched to canvas height.
+   Switches on page aspect ratio — landscape (width ≥ height) goes side-by-side. */
+@media (min-aspect-ratio: 1/1) {
+  :root {
+    --canvas-size: min(
+      calc(100dvh - 2 * var(--pad)),
+      calc(100vw - 2 * var(--pad) - var(--gap) - var(--panel-w))
+    );
+  }
+
+  #app {
+    flex-direction: row;
+  }
+
+  #sidebar {
+    width: var(--panel-w);
+  }
+}
+
+/* ── Sidebar panel ────────────────────────────────────────────────────────── */
+
+#sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #181820;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
 
 #controls {
-  position: relative; /* anchor for #settings-popup */
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  width: var(--canvas-size);
-  height: var(--controls-h);
 }
 
 #controls button {
@@ -75,40 +111,15 @@ body {
   height: 16px;
 }
 
-/* Settings cog — pushed to the far right */
-#btn-settings {
-  margin-left: auto;
-}
+/* ── Settings ─────────────────────────────────────────────────────────────── */
 
-/* ── Settings popup ───────────────────────────────────────────────────────── */
-
-#settings-popup {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
-  width: 260px;
-  background: rgba(15, 15, 25, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  padding: 1.25rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  z-index: 50;
-}
-
-#settings-popup.hidden {
-  display: none;
-}
-
-.setting-row {
+.setting {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.setting-row label {
+.setting label {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -127,16 +138,16 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.setting-row input[type="range"] {
+.setting input[type="range"] {
   width: 100%;
   accent-color: hsl(200, 70%, 55%);
   cursor: pointer;
 }
 
-.setting-row:has(input:disabled) {
+.setting:has(input:disabled) {
   opacity: 0.45;
 }
 
-.setting-row input[type="range"]:disabled {
+.setting input[type="range"]:disabled {
   cursor: not-allowed;
 }

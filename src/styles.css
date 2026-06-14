@@ -113,10 +113,6 @@ body {
 
 #fps-counter {
   margin-left: auto;
-  font-size: 0.8rem;
-  color: #aaa;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }
 

@@ -41,14 +41,38 @@ function resetSimulation(): void {
 
 sidebar.onReset(resetSimulation);
 
+// ── FPS counter ────────────────────────────────────────────────────────────
+
+const fpsCounter = document.getElementById("fps-counter") as HTMLSpanElement;
+let fpsFrameCount = 0;
+let fpsWindowStart = 0; // 0 = not yet started
+
 // ── Animation loop ─────────────────────────────────────────────────────────
 
-function loop(): void {
+function loop(now: DOMHighResTimeStamp): void {
   requestAnimationFrame(loop);
 
   if (sidebar.state !== "running") {
+    if (fpsWindowStart !== 0) {
+      fpsCounter.textContent = "-- FPS";
+      fpsFrameCount = 0;
+      fpsWindowStart = 0;
+    }
     return;
   }
+
+  fpsFrameCount++;
+  if (fpsWindowStart === 0) {
+    fpsWindowStart = now;
+  } else {
+    const elapsed = now - fpsWindowStart;
+    if (elapsed >= 500) {
+      fpsCounter.textContent = `${Math.round((fpsFrameCount / elapsed) * 1000)} FPS`;
+      fpsFrameCount = 0;
+      fpsWindowStart = now;
+    }
+  }
+
   if (workerBusy) {
     console.warn("Worker not ready for next frame - ticks per frame may be too high");
     return;

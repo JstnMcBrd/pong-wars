@@ -95,16 +95,13 @@ class Sidebar {
   /** Record one painted frame; updates the FPS display every 500 ms. */
   public recordFrame(): void {
     const now = performance.now();
+    if (this.fpsWindowStart === 0) { this.fpsWindowStart = now; return; }
     this.fpsFrameCount++;
-    if (this.fpsWindowStart === 0) {
+    const elapsed = now - this.fpsWindowStart;
+    if (elapsed >= 500) {
+      this.fpsCounter.textContent = `${Math.round((this.fpsFrameCount / elapsed) * 1000)} FPS`;
+      this.fpsFrameCount = 0;
       this.fpsWindowStart = now;
-    } else {
-      const elapsed = now - this.fpsWindowStart;
-      if (elapsed >= 500) {
-        this.fpsCounter.textContent = `${Math.round((this.fpsFrameCount / elapsed) * 1000)} FPS`;
-        this.fpsFrameCount = 0;
-        this.fpsWindowStart = now;
-      }
     }
   }
 

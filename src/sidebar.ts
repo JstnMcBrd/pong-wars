@@ -39,6 +39,9 @@ class Sidebar {
   private readonly inpSpeed: HTMLInputElement;
   private readonly valSpeed: HTMLSpanElement;
 
+  private readonly fpsCounter: HTMLSpanElement;
+  private fpsFrameCount = 0;
+
   private _state: SimState = "preview";
   private resetCb: (() => void) | null = null;
 
@@ -55,10 +58,19 @@ class Sidebar {
     this.inpSpeed = document.getElementById("inp-speed") as HTMLInputElement;
     this.valSpeed = document.getElementById("val-speed") as HTMLSpanElement;
 
+    this.fpsCounter = document.getElementById("fps-counter") as HTMLSpanElement;
+
     this.initSliders();
     this.wireButtons();
     this.wireSliders();
     this.setState("preview");
+
+    setInterval(() => {
+      if (this._state === "running") {
+        this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
+      }
+      this.fpsFrameCount = 0;
+    }, 1000);
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -86,6 +98,11 @@ class Sidebar {
     this.resetCb = cb;
   }
 
+  /** Record one painted frame. */
+  public recordFrame(): void {
+    this.fpsFrameCount++;
+  }
+
   // ── State transitions ───────────────────────────────────────────────────────
 
   private setState(state: SimState): void {
@@ -99,6 +116,11 @@ class Sidebar {
     const locked = state !== "preview";
     this.inpTeams.disabled = locked;
     this.inpSize.disabled = locked;
+
+    if (state !== "running") {
+      this.fpsCounter.textContent = "-- FPS";
+      this.fpsFrameCount = 0;
+    }
   }
 
   // ── Private setup ─────────────────────────────────────────────────────────

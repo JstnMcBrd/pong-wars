@@ -111,6 +111,11 @@ body {
   height: 16px;
 }
 
+#fps-counter {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Settings ─────────────────────────────────────────────────────────────── */
 
 .setting {

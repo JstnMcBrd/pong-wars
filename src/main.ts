@@ -20,6 +20,7 @@ worker.onmessage = function (e: MessageEvent<WorkerReply>) {
   if (msg.type === "frame") {
     workerBusy = false;
     canvas.draw(msg.grid, msg.cols, msg.rows, msg.balls);
+    sidebar.recordFrame();
   }
 };
 worker.onerror = function (e) {

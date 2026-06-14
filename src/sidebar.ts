@@ -58,7 +58,7 @@ class Sidebar {
     this.initSliders();
     this.wireButtons();
     this.wireSliders();
-    this.toPreview();
+    this.setState("preview");
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -88,35 +88,15 @@ class Sidebar {
 
   // ── State transitions ───────────────────────────────────────────────────────
 
-  private toPreview(): void {
-    this._state = "preview";
-    this.btnStart.hidden = false;
-    this.btnStop.hidden = true;
-    this.btnPause.hidden = true;
-    this.btnResume.hidden = true;
-    this.lockSettings(false);
-  }
+  private setState(state: SimState): void {
+    this._state = state;
+    this.btnStart.hidden = state !== "preview";
+    this.btnStop.hidden = state === "preview";
+    this.btnPause.hidden = state !== "running";
+    this.btnResume.hidden = state !== "paused";
 
-  private toRunning(): void {
-    this._state = "running";
-    this.btnStart.hidden = true;
-    this.btnStop.hidden = false;
-    this.btnPause.hidden = false;
-    this.btnResume.hidden = true;
-    this.lockSettings(true);
-  }
-
-  private toPaused(): void {
-    this._state = "paused";
-    this.btnStart.hidden = true;
-    this.btnStop.hidden = false;
-    this.btnPause.hidden = true;
-    this.btnResume.hidden = false;
-    this.lockSettings(true);
-  }
-
-  /** Disable the reset-required sliders (teams, size) while the simulation is active. */
-  private lockSettings(locked: boolean): void {
+    // Lock the reset-required sliders (teams, size) while the simulation is active.
+    const locked = state !== "preview";
     this.inpTeams.disabled = locked;
     this.inpSize.disabled = locked;
   }
@@ -142,29 +122,30 @@ class Sidebar {
 
   private wireButtons(): void {
     this.btnStart.addEventListener("click", () => {
-      this.toRunning();
+      this.setState("running");
     });
 
     this.btnStop.addEventListener("click", () => {
-      this.toPreview();
+      this.setState("preview");
       this.resetCb?.();
     });
 
     this.btnPause.addEventListener("click", () => {
-      this.toPaused();
+      this.setState("paused");
     });
 
     this.btnResume.addEventListener("click", () => {
-      this.toRunning();
+      this.setState("running");
     });
   }
 
   private wireSliders(): void {
     this.inpSize.addEventListener("input", () => {
-      this.valSize.textContent = `${this.gridSize}x${this.gridSize}`;
+      const gridSize = Number(this.inpSize.value);
+      this.valSize.textContent = `${gridSize}x${gridSize}`;
 
       const curNumTeams = this.numTeams;
-      const newMaxTeams = computeMaxTeams(this.gridSize);
+      const newMaxTeams = computeMaxTeams(gridSize);
       this.inpTeams.max = String(newMaxTeams);
 
       if (curNumTeams > newMaxTeams) {

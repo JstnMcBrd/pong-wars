@@ -39,7 +39,7 @@ function resetSimulation(): void {
 
 // ── Orchestration ──────────────────────────────────────────────────────────
 
-sidebar.onReset(() => resetSimulation());
+sidebar.onReset(resetSimulation);
 
 // ── Animation loop ─────────────────────────────────────────────────────────
 

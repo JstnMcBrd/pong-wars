@@ -41,7 +41,6 @@ class Sidebar {
 
   private readonly fpsCounter: HTMLSpanElement;
   private fpsFrameCount = 0;
-  private fpsWindowStart = 0;
 
   private _state: SimState = "preview";
   private resetCb: (() => void) | null = null;
@@ -65,6 +64,13 @@ class Sidebar {
     this.wireButtons();
     this.wireSliders();
     this.setState("preview");
+
+    setInterval(() => {
+      if (this._state === "running") {
+        this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
+      }
+      this.fpsFrameCount = 0;
+    }, 1000);
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -92,17 +98,9 @@ class Sidebar {
     this.resetCb = cb;
   }
 
-  /** Record one painted frame; updates the FPS display every 500 ms. */
+  /** Record one painted frame. */
   public recordFrame(): void {
-    const now = performance.now();
-    if (this.fpsWindowStart === 0) { this.fpsWindowStart = now; return; }
     this.fpsFrameCount++;
-    const elapsed = now - this.fpsWindowStart;
-    if (elapsed >= 500) {
-      this.fpsCounter.textContent = `${Math.round((this.fpsFrameCount / elapsed) * 1000)} FPS`;
-      this.fpsFrameCount = 0;
-      this.fpsWindowStart = now;
-    }
   }
 
   // ── State transitions ───────────────────────────────────────────────────────
@@ -122,7 +120,6 @@ class Sidebar {
     if (state !== "running") {
       this.fpsCounter.textContent = "-- FPS";
       this.fpsFrameCount = 0;
-      this.fpsWindowStart = 0;
     }
   }
 

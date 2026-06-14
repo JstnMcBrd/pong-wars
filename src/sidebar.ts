@@ -1,3 +1,5 @@
+type SimState = "preview" | "running" | "paused";
+
 // ── Defaults and bounds ──────────────────────────────────────────────────────
 
 const DEFAULTS = {
@@ -17,11 +19,19 @@ function computeMaxTeams(gridSize: number): number {
   return Math.floor(circumference / 2);
 }
 
-// ── Settings class ───────────────────────────────────────────────────────────
+// ── Sidebar class ────────────────────────────────────────────────────────────
 
-class Settings {
-  private readonly popup: HTMLDivElement;
-  private readonly btnSettings: HTMLButtonElement;
+/**
+ * DOM wrapper for the sidebar panel. Owns the simulation control buttons
+ * (start/stop/pause/resume) and the settings sliders (teams/size/speed),
+ * tracks the {@link SimState}, and exposes the live setting values.
+ */
+class Sidebar {
+  private readonly btnStart: HTMLButtonElement;
+  private readonly btnStop: HTMLButtonElement;
+  private readonly btnPause: HTMLButtonElement;
+  private readonly btnResume: HTMLButtonElement;
+
   private readonly inpTeams: HTMLInputElement;
   private readonly valTeams: HTMLSpanElement;
   private readonly inpSize: HTMLInputElement;
@@ -29,11 +39,15 @@ class Settings {
   private readonly inpSpeed: HTMLInputElement;
   private readonly valSpeed: HTMLSpanElement;
 
+  private _state: SimState = "preview";
   private resetCb: (() => void) | null = null;
 
   constructor() {
-    this.popup = document.getElementById("settings-popup") as HTMLDivElement;
-    this.btnSettings = document.getElementById("btn-settings") as HTMLButtonElement;
+    this.btnStart = document.getElementById("btn-start") as HTMLButtonElement;
+    this.btnStop = document.getElementById("btn-stop") as HTMLButtonElement;
+    this.btnPause = document.getElementById("btn-pause") as HTMLButtonElement;
+    this.btnResume = document.getElementById("btn-resume") as HTMLButtonElement;
+
     this.inpTeams = document.getElementById("inp-teams") as HTMLInputElement;
     this.valTeams = document.getElementById("val-teams") as HTMLSpanElement;
     this.inpSize = document.getElementById("inp-size") as HTMLInputElement;
@@ -42,11 +56,18 @@ class Settings {
     this.valSpeed = document.getElementById("val-speed") as HTMLSpanElement;
 
     this.initSliders();
-    this.wirePopup();
+    this.wireButtons();
     this.wireSliders();
+    this.setState("preview");
   }
 
-  // ── DOM-backed getters ────────────────────────────────────────────────────
+  // ── State ─────────────────────────────────────────────────────────────────
+
+  public get state(): SimState {
+    return this._state;
+  }
+
+  // ── DOM-backed setting getters ──────────────────────────────────────────────
 
   public get numTeams(): number {
     return Number(this.inpTeams.value);
@@ -60,15 +81,24 @@ class Settings {
 
   // ── Public methods ────────────────────────────────────────────────────────
 
-  /** Register a callback invoked when a setting change requires a simulation reset. */
-  public onResetRequired(cb: () => void): void {
+  /** Register a callback invoked whenever the simulation must be (re)initialized. */
+  public onReset(cb: () => void): void {
     this.resetCb = cb;
   }
 
-  /** Disable reset-required settings (gridSize, numTeams) while the simulation runs. */
-  public setRunning(running: boolean): void {
-    this.inpTeams.disabled = running;
-    this.inpSize.disabled = running;
+  // ── State transitions ───────────────────────────────────────────────────────
+
+  private setState(state: SimState): void {
+    this._state = state;
+    this.btnStart.hidden = state !== "preview";
+    this.btnStop.hidden = state === "preview";
+    this.btnPause.hidden = state !== "running";
+    this.btnResume.hidden = state !== "paused";
+
+    // Lock the reset-required sliders (teams, size) while the simulation is active.
+    const locked = state !== "preview";
+    this.inpTeams.disabled = locked;
+    this.inpSize.disabled = locked;
   }
 
   // ── Private setup ─────────────────────────────────────────────────────────
@@ -90,37 +120,32 @@ class Settings {
     this.valSpeed.textContent = String(DEFAULTS.ticksPerFrame);
   }
 
-  private wirePopup(): void {
-    // Show/hide pop when settings button clicked
-    this.btnSettings.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.popup.classList.toggle("hidden");
+  private wireButtons(): void {
+    this.btnStart.addEventListener("click", () => {
+      this.setState("running");
     });
 
-    // Hide popup when clicking outside of it
-    document.addEventListener("click", (e) => {
-      if (!this.popup.contains(e.target as Node) && !this.popup.classList.contains("hidden")) {
-        this.popup.classList.add("hidden");
-      }
+    this.btnStop.addEventListener("click", () => {
+      this.setState("preview");
+      this.resetCb?.();
     });
 
-    // Hide popup on Escape key
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        this.popup.classList.add("hidden");
-      }
+    this.btnPause.addEventListener("click", () => {
+      this.setState("paused");
     });
 
-    // Prevent clicks inside the popup from hiding it
-    this.popup.addEventListener("click", (e) => e.stopPropagation());
+    this.btnResume.addEventListener("click", () => {
+      this.setState("running");
+    });
   }
 
   private wireSliders(): void {
     this.inpSize.addEventListener("input", () => {
-      this.valSize.textContent = `${this.gridSize}x${this.gridSize}`;
+      const gridSize = Number(this.inpSize.value);
+      this.valSize.textContent = `${gridSize}x${gridSize}`;
 
       const curNumTeams = this.numTeams;
-      const newMaxTeams = computeMaxTeams(this.gridSize);
+      const newMaxTeams = computeMaxTeams(gridSize);
       this.inpTeams.max = String(newMaxTeams);
 
       if (curNumTeams > newMaxTeams) {
@@ -144,4 +169,4 @@ class Settings {
   }
 }
 
-export const settings = new Settings();
+export const sidebar = new Sidebar();

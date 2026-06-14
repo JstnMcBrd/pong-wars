@@ -1,12 +1,11 @@
 import "./styles.css";
-import { createIcons, Pause, Play, Settings, Square } from "lucide";
+import { createIcons, Pause, Play, Square } from "lucide";
 
 import { canvas } from "./canvas.js";
-import { controls } from "./controls.js";
-import { settings } from "./settings.js";
+import { sidebar } from "./sidebar.js";
 import type { WorkerMessage, WorkerReply } from "./worker.js";
 
-createIcons({ icons: { Pause, Play, Settings, Square } });
+createIcons({ icons: { Pause, Play, Square } });
 
 // ── Simulation Worker ──────────────────────────────────────────────────────
 
@@ -16,7 +15,7 @@ const worker = new Worker(new URL("./worker.js", import.meta.url), { type: "modu
 worker.onmessage = function (e: MessageEvent<WorkerReply>) {
   const msg = e.data;
   if (msg.type === "ready") {
-    resetWorker();
+    resetSimulation();
   }
   if (msg.type === "frame") {
     workerBusy = false;
@@ -27,38 +26,27 @@ worker.onerror = function (e) {
   console.error("Worker error:", e);
 };
 
-function resetWorker(): void {
+function resetSimulation(): void {
   workerBusy = true;
   const msg: WorkerMessage = {
     type: "reset",
-    numCols: settings.gridSize,
-    numRows: settings.gridSize,
-    numTeams: settings.numTeams,
+    numCols: sidebar.gridSize,
+    numRows: sidebar.gridSize,
+    numTeams: sidebar.numTeams,
   };
   worker.postMessage(msg);
 }
 
 // ── Orchestration ──────────────────────────────────────────────────────────
 
-settings.onResetRequired(() => {
-  resetWorker();
-});
-
-controls.onStart(() => {
-  settings.setRunning(true);
-});
-
-controls.onStop(() => {
-  resetWorker();
-  settings.setRunning(false);
-});
+sidebar.onReset(resetSimulation);
 
 // ── Animation loop ─────────────────────────────────────────────────────────
 
 function loop(): void {
   requestAnimationFrame(loop);
 
-  if (controls.state !== "running") {
+  if (sidebar.state !== "running") {
     return;
   }
   if (workerBusy) {
@@ -69,7 +57,7 @@ function loop(): void {
   workerBusy = true;
   const msg: WorkerMessage = {
     type: "tick",
-    ticks: settings.ticksPerFrame,
+    ticks: sidebar.ticksPerFrame,
   };
   worker.postMessage(msg);
 }

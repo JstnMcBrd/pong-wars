@@ -8,25 +8,23 @@
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <canvas id="canvas"></canvas>
+    <div id="app">
+      <canvas id="canvas"></canvas>
 
-    <div id="controls">
-      <!-- Idle state -->
-      <button id="btn-start" aria-label="Play"><i data-lucide="play"></i></button>
+      <div id="sidebar">
+        <div id="controls">
+          <!-- Idle state -->
+          <button id="btn-start" aria-label="Play"><i data-lucide="play"></i></button>
 
-      <!-- Running state (hidden initially) -->
-      <button id="btn-stop" hidden aria-label="Stop"><i data-lucide="square"></i></button>
-      <button id="btn-pause" hidden aria-label="Pause"><i data-lucide="pause"></i></button>
+          <!-- Running state -->
+          <button id="btn-stop" hidden aria-label="Stop"><i data-lucide="square"></i></button>
+          <button id="btn-pause" hidden aria-label="Pause"><i data-lucide="pause"></i></button>
 
-      <!-- Paused state — replaces Pause (hidden initially) -->
-      <button id="btn-resume" hidden aria-label="Play"><i data-lucide="play"></i></button>
+          <!-- Paused state -->
+          <button id="btn-resume" hidden aria-label="Play"><i data-lucide="play"></i></button>
+        </div>
 
-      <!-- Settings button — margin-left: auto pushes it to the far right -->
-      <button id="btn-settings" aria-label="Settings"><i data-lucide="settings"></i></button>
-
-      <!-- Settings popup (anchored inside #controls) -->
-      <div id="settings-popup" class="hidden" role="dialog" aria-label="Settings">
-        <div class="setting-row">
+        <div class="setting">
           <label>
             <span class="setting-label">Teams</span>
             <span class="setting-value" id="val-teams">?</span>
@@ -34,7 +32,7 @@
           <input type="range" id="inp-teams" min="?" max="?" value="?" />
         </div>
 
-        <div class="setting-row">
+        <div class="setting">
           <label>
             <span class="setting-label">Grid Size</span>
             <span class="setting-value" id="val-size">?x?</span>
@@ -42,7 +40,7 @@
           <input type="range" id="inp-size" min="?" max="?" value="?" />
         </div>
 
-        <div class="setting-row">
+        <div class="setting">
           <label>
             <span class="setting-label">Speed (ticks/frame)</span>
             <span class="setting-value" id="val-speed">?</span>

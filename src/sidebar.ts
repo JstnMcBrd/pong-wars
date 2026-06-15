@@ -14,6 +14,8 @@ const BOUNDS = {
   ticksPerFrame: { min: 1, max: 500 },
 } satisfies Record<keyof typeof DEFAULTS, { min: number; max?: number }>;
 
+const FPS_UPDATE_INTERVAL_MS = 500;
+
 function computeMaxTeams(gridSize: number): number {
   const circumference = Math.PI * 2 * (gridSize / 4);
   return Math.floor(circumference / 2);
@@ -99,7 +101,8 @@ class Sidebar {
 
   /** Write the accumulated frame count to the FPS counter and reset it. */
   private updateFps(): void {
-    this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
+    const fps = Math.round(this.fpsFrameCount * (1000 / FPS_UPDATE_INTERVAL_MS));
+    this.fpsCounter.textContent = `${fps} FPS`;
     this.fpsFrameCount = 0;
   }
 
@@ -112,7 +115,7 @@ class Sidebar {
     this.btnPause.hidden = state !== "running";
     this.btnResume.hidden = state !== "paused";
     if (state === "running") {
-      this.fpsInterval = setInterval(() => this.updateFps(), 1000);
+      this.fpsInterval = setInterval(() => this.updateFps(), FPS_UPDATE_INTERVAL_MS);
     }
 
     if (state !== "running") {

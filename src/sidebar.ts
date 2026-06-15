@@ -111,14 +111,14 @@ class Sidebar {
     this.btnStop.hidden = state === "preview";
     this.btnPause.hidden = state !== "running";
     this.btnResume.hidden = state !== "paused";
-    this.fpsCounter.hidden = state !== "running";
-
     if (state === "running") {
+      this.fpsInterval = setInterval(() => this.updateFps(), 1000);
+    }
+
+    if (state !== "running") {
       this.fpsFrameCount = 0;
       this.fpsCounter.textContent = "";
-
       clearInterval(this.fpsInterval);
-      this.fpsInterval = setInterval(() => this.updateFps(), 1000);
     }
 
     // Lock the reset-required sliders (teams, size) while the simulation is active.

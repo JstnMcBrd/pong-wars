@@ -41,6 +41,7 @@ class Sidebar {
 
   private readonly fpsCounter: HTMLSpanElement;
   private fpsFrameCount = 0;
+  private fpsInterval: ReturnType<typeof setInterval> | null = null;
 
   private _state: SimState = "preview";
   private resetCb: (() => void) | null = null;
@@ -64,11 +65,6 @@ class Sidebar {
     this.wireButtons();
     this.wireSliders();
     this.setState("preview");
-
-    setInterval(() => {
-      this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
-      this.fpsFrameCount = 0;
-    }, 1000);
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -110,6 +106,15 @@ class Sidebar {
     this.btnPause.hidden = state !== "running";
     this.btnResume.hidden = state !== "paused";
     this.fpsCounter.hidden = state !== "running";
+
+    if (this.fpsInterval !== null) clearInterval(this.fpsInterval);
+    if (state === "running") {
+      this.fpsFrameCount = 0;
+      this.fpsInterval = setInterval(() => {
+        this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
+        this.fpsFrameCount = 0;
+      }, 1000);
+    }
 
     // Lock the reset-required sliders (teams, size) while the simulation is active.
     const locked = state !== "preview";

@@ -66,9 +66,7 @@ class Sidebar {
     this.setState("preview");
 
     setInterval(() => {
-      if (this._state === "running") {
-        this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
-      }
+      this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
       this.fpsFrameCount = 0;
     }, 1000);
   }
@@ -111,16 +109,12 @@ class Sidebar {
     this.btnStop.hidden = state === "preview";
     this.btnPause.hidden = state !== "running";
     this.btnResume.hidden = state !== "paused";
+    this.fpsCounter.hidden = state !== "running";
 
     // Lock the reset-required sliders (teams, size) while the simulation is active.
     const locked = state !== "preview";
     this.inpTeams.disabled = locked;
     this.inpSize.disabled = locked;
-
-    if (state !== "running") {
-      this.fpsCounter.textContent = "-- FPS";
-      this.fpsFrameCount = 0;
-    }
   }
 
   // ── Private setup ─────────────────────────────────────────────────────────

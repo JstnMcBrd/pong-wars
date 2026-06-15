@@ -41,7 +41,7 @@ class Sidebar {
 
   private readonly fpsCounter: HTMLSpanElement;
   private fpsFrameCount = 0;
-  private fpsInterval: ReturnType<typeof setInterval> | null = null;
+  private fpsInterval = 0;
 
   private _state: SimState = "preview";
   private resetCb: (() => void) | null = null;
@@ -107,8 +107,8 @@ class Sidebar {
     this.btnResume.hidden = state !== "paused";
     this.fpsCounter.hidden = state !== "running";
 
-    if (this.fpsInterval !== null) clearInterval(this.fpsInterval);
     if (state === "running") {
+      clearInterval(this.fpsInterval);
       this.fpsFrameCount = 0;
       this.fpsInterval = setInterval(() => {
         this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;

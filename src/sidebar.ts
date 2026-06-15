@@ -108,8 +108,8 @@ class Sidebar {
     this.fpsCounter.hidden = state !== "running";
 
     if (state === "running") {
-      clearInterval(this.fpsInterval);
       this.fpsFrameCount = 0;
+      clearInterval(this.fpsInterval);
       this.fpsInterval = setInterval(() => {
         this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
         this.fpsFrameCount = 0;

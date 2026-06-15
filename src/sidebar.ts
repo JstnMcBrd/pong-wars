@@ -97,6 +97,7 @@ class Sidebar {
     this.fpsFrameCount++;
   }
 
+  /** Write the accumulated frame count to the FPS counter and reset it. */
   private updateFps(): void {
     this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
     this.fpsFrameCount = 0;

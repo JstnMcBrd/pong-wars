@@ -116,9 +116,6 @@ class Sidebar {
     this.inpTeams.disabled = locked;
     this.inpSize.disabled = locked;
 
-    if (state === "preview") {
-      this.fpsFrameCount = 0;
-    }
   }
 
   // ── Private setup ─────────────────────────────────────────────────────────

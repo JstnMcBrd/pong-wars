@@ -116,6 +116,7 @@ class Sidebar {
     if (state === "running") {
       this.fpsFrameCount = 0;
       this.fpsCounter.textContent = "";
+
       clearInterval(this.fpsInterval);
       this.fpsInterval = setInterval(() => this.updateFps(), 1000);
     }

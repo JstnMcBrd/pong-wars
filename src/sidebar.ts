@@ -115,11 +115,9 @@ class Sidebar {
     this.btnPause.hidden = state !== "running";
     this.btnResume.hidden = state !== "paused";
     if (state === "running") {
-      this.fpsInterval = setInterval(() => this.updateFps(), FPS_UPDATE_INTERVAL_MS);
-    }
-
-    if (state !== "running") {
       this.fpsFrameCount = 0;
+      this.fpsInterval = setInterval(() => this.updateFps(), FPS_UPDATE_INTERVAL_MS);
+    } else {
       this.fpsCounter.textContent = "";
       clearInterval(this.fpsInterval);
     }

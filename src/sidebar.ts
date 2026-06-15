@@ -118,7 +118,6 @@ class Sidebar {
       this.fpsFrameCount = 0;
       this.fpsInterval = setInterval(() => this.updateFps(), FPS_UPDATE_INTERVAL_MS);
     } else {
-      this.fpsFrameCount = 0;
       this.fpsCounter.textContent = "";
       clearInterval(this.fpsInterval);
     }

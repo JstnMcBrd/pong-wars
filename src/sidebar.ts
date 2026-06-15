@@ -97,6 +97,11 @@ class Sidebar {
     this.fpsFrameCount++;
   }
 
+  private updateFps(): void {
+    this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
+    this.fpsFrameCount = 0;
+  }
+
   // ── State transitions ───────────────────────────────────────────────────────
 
   private setState(state: SimState): void {
@@ -110,10 +115,7 @@ class Sidebar {
     if (state === "running") {
       this.fpsFrameCount = 0;
       clearInterval(this.fpsInterval);
-      this.fpsInterval = setInterval(() => {
-        this.fpsCounter.textContent = `${this.fpsFrameCount} FPS`;
-        this.fpsFrameCount = 0;
-      }, 1000);
+      this.fpsInterval = setInterval(() => this.updateFps(), 1000);
     }
 
     // Lock the reset-required sliders (teams, size) while the simulation is active.

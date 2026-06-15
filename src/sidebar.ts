@@ -115,7 +115,6 @@ class Sidebar {
     const locked = state !== "preview";
     this.inpTeams.disabled = locked;
     this.inpSize.disabled = locked;
-
   }
 
   // ── Private setup ─────────────────────────────────────────────────────────

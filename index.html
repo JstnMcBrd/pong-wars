@@ -31,7 +31,15 @@
             <span class="setting-label">Teams</span>
             <span class="setting-value" id="val-teams">?</span>
           </label>
-          <input type="range" id="inp-teams" min="?" max="?" value="?" />
+          <div class="slider-row">
+            <button class="step-btn" id="dec-teams" tabindex="-1" aria-label="Decrease teams">
+              −
+            </button>
+            <input type="range" id="inp-teams" min="?" max="?" value="?" />
+            <button class="step-btn" id="inc-teams" tabindex="-1" aria-label="Increase teams">
+              +
+            </button>
+          </div>
         </div>
 
         <div class="setting">
@@ -39,7 +47,15 @@
             <span class="setting-label">Grid Size</span>
             <span class="setting-value" id="val-size">?x?</span>
           </label>
-          <input type="range" id="inp-size" min="?" max="?" value="?" />
+          <div class="slider-row">
+            <button class="step-btn" id="dec-size" tabindex="-1" aria-label="Decrease grid size">
+              −
+            </button>
+            <input type="range" id="inp-size" min="?" max="?" value="?" />
+            <button class="step-btn" id="inc-size" tabindex="-1" aria-label="Increase grid size">
+              +
+            </button>
+          </div>
         </div>
 
         <div class="setting">
@@ -47,7 +63,15 @@
             <span class="setting-label">Speed (ticks/frame)</span>
             <span class="setting-value" id="val-speed">?</span>
           </label>
-          <input type="range" id="inp-speed" min="?" max="?" value="?" />
+          <div class="slider-row">
+            <button class="step-btn" id="dec-speed" tabindex="-1" aria-label="Decrease speed">
+              −
+            </button>
+            <input type="range" id="inp-speed" min="?" max="?" value="?" />
+            <button class="step-btn" id="inc-speed" tabindex="-1" aria-label="Increase speed">
+              +
+            </button>
+          </div>
         </div>
       </div>
     </div>

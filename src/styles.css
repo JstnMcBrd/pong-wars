@@ -130,6 +130,40 @@ body {
   align-items: baseline;
 }
 
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #aaa;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.step-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #e0e0e0;
+}
+
+.setting:has(input:disabled) .step-btn {
+  pointer-events: none;
+}
+
 .setting-label {
   font-size: 0.8rem;
   color: #aaa;
@@ -144,7 +178,8 @@ body {
 }
 
 .setting input[type="range"] {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   accent-color: hsl(200, 70%, 55%);
   cursor: pointer;
 }

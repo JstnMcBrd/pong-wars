@@ -16,11 +16,12 @@
   --gap: 16px;
   --panel-w: 17rem; /* panel width when side-by-side */
   --panel-h: 14rem; /* panel height when stacked */
+  --header-h: 3rem; /* reserved height for the site header (title + links) */
 
   /* Stacked layout (default): canvas above, panel below. */
   --canvas-size: min(
     calc(100vw - 2 * var(--pad)),
-    calc(100dvh - 2 * var(--pad) - var(--gap) - var(--panel-h))
+    calc(100dvh - 2 * var(--pad) - var(--header-h) - 2 * var(--gap) - var(--panel-h))
   );
 }
 
@@ -31,14 +32,54 @@ body {
   font-size: 14px;
   height: 100dvh;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--pad);
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+#header {
+  flex: none;
+  height: var(--header-h);
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--pad);
+  gap: 0.15rem;
+  width: 100%;
+  padding-bottom: 8px;
+}
+
+#header h1 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+#header nav {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+#header nav a {
+  color: #aaa;
+  text-decoration: none;
+}
+
+#header nav a:hover {
+  color: #e0e0e0;
+  text-decoration: underline;
+}
+
+#header .sep {
+  margin: 0 0.15rem;
 }
 
 /* ── Layout ───────────────────────────────────────────────────────────────── */
 
 #app {
+  margin: auto 0; /* center vertically in the space below the header */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -56,7 +97,7 @@ body {
 @media (min-aspect-ratio: 1/1) {
   :root {
     --canvas-size: min(
-      calc(100dvh - 2 * var(--pad)),
+      calc(100dvh - 2 * var(--pad) - var(--header-h) - var(--gap)),
       calc(100vw - 2 * var(--pad) - var(--gap) - var(--panel-w))
     );
   }

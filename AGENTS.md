@@ -53,7 +53,7 @@ canvas.ts  draws frame
 
 ### Layout and canvas sizing
 
-The canvas and sidebar panel live in an `#app` flex container. A media query in `styles.css` flips the layout between **side-by-side** (landscape) and **stacked** (portrait), and the square canvas is sized to fit the viewport with room reserved for the panel.
+A minimalist `#header` (title and attribution links) sits at the top of the `body`, with the canvas and sidebar panel below in an `#app` flex container. A media query in `styles.css` flips the `#app` layout between **side-by-side** (landscape) and **stacked** (portrait), and the square canvas is sized to fit the viewport with room reserved for both the header and the panel.
 
 ### Coordinate space
 

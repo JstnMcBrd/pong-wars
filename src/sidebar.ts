@@ -36,10 +36,18 @@ class Sidebar {
 
   private readonly inpTeams: HTMLInputElement;
   private readonly valTeams: HTMLSpanElement;
+  private readonly decTeams: HTMLButtonElement;
+  private readonly incTeams: HTMLButtonElement;
+
   private readonly inpSize: HTMLInputElement;
   private readonly valSize: HTMLSpanElement;
+  private readonly decSize: HTMLButtonElement;
+  private readonly incSize: HTMLButtonElement;
+
   private readonly inpSpeed: HTMLInputElement;
   private readonly valSpeed: HTMLSpanElement;
+  private readonly decSpeed: HTMLButtonElement;
+  private readonly incSpeed: HTMLButtonElement;
 
   private readonly fpsCounter: HTMLSpanElement;
   private fpsFrameCount = 0;
@@ -56,16 +64,25 @@ class Sidebar {
 
     this.inpTeams = document.getElementById("inp-teams") as HTMLInputElement;
     this.valTeams = document.getElementById("val-teams") as HTMLSpanElement;
+    this.decTeams = document.getElementById("dec-teams") as HTMLButtonElement;
+    this.incTeams = document.getElementById("inc-teams") as HTMLButtonElement;
+
     this.inpSize = document.getElementById("inp-size") as HTMLInputElement;
     this.valSize = document.getElementById("val-size") as HTMLSpanElement;
+    this.decSize = document.getElementById("dec-size") as HTMLButtonElement;
+    this.incSize = document.getElementById("inc-size") as HTMLButtonElement;
+
     this.inpSpeed = document.getElementById("inp-speed") as HTMLInputElement;
     this.valSpeed = document.getElementById("val-speed") as HTMLSpanElement;
+    this.decSpeed = document.getElementById("dec-speed") as HTMLButtonElement;
+    this.incSpeed = document.getElementById("inc-speed") as HTMLButtonElement;
 
     this.fpsCounter = document.getElementById("fps-counter") as HTMLSpanElement;
 
     this.initSliders();
     this.wireButtons();
     this.wireSliders();
+    this.wireStepButtons();
     this.setState("preview");
   }
 
@@ -78,13 +95,13 @@ class Sidebar {
   // ── DOM-backed setting getters ──────────────────────────────────────────────
 
   public get numTeams(): number {
-    return Number(this.inpTeams.value);
+    return this.inpTeams.valueAsNumber;
   }
   public get gridSize(): number {
-    return Number(this.inpSize.value);
+    return this.inpSize.valueAsNumber;
   }
   public get ticksPerFrame(): number {
-    return Number(this.inpSpeed.value);
+    return this.inpSpeed.valueAsNumber;
   }
 
   // ── Public methods ────────────────────────────────────────────────────────
@@ -166,9 +183,27 @@ class Sidebar {
     });
   }
 
+  private step(input: HTMLInputElement, delta: number): void {
+    const next = Math.min(Math.max(input.valueAsNumber + delta, +input.min), +input.max);
+    if (next === input.valueAsNumber) return;
+    input.valueAsNumber = next;
+    input.dispatchEvent(new Event("input"));
+  }
+
+  private wireStepButtons(): void {
+    this.decTeams.addEventListener("click", () => this.step(this.inpTeams, -1));
+    this.incTeams.addEventListener("click", () => this.step(this.inpTeams, +1));
+
+    this.decSize.addEventListener("click", () => this.step(this.inpSize, -1));
+    this.incSize.addEventListener("click", () => this.step(this.inpSize, +1));
+
+    this.decSpeed.addEventListener("click", () => this.step(this.inpSpeed, -1));
+    this.incSpeed.addEventListener("click", () => this.step(this.inpSpeed, +1));
+  }
+
   private wireSliders(): void {
     this.inpSize.addEventListener("input", () => {
-      const gridSize = Number(this.inpSize.value);
+      const gridSize = this.inpSize.valueAsNumber;
       this.valSize.textContent = `${gridSize}x${gridSize}`;
 
       const curNumTeams = this.numTeams;

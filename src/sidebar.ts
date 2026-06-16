@@ -131,6 +131,7 @@ class Sidebar {
     this.btnStop.hidden = state === "preview";
     this.btnPause.hidden = state !== "running";
     this.btnResume.hidden = state !== "paused";
+
     if (state === "running") {
       this.fpsFrameCount = 0;
       this.fpsInterval = setInterval(() => this.updateFps(), FPS_UPDATE_INTERVAL_MS);
@@ -183,10 +184,12 @@ class Sidebar {
     });
   }
 
+  /** Nudge a slider by `delta`, clamped to its bounds. */
   private step(input: HTMLInputElement, delta: number): void {
     const next = Math.min(Math.max(input.valueAsNumber + delta, +input.min), +input.max);
     if (next === input.valueAsNumber) return;
     input.valueAsNumber = next;
+    // Trigger the change callback, as if the user had dragged the slider.
     input.dispatchEvent(new Event("input"));
   }
 

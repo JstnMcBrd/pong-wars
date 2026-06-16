@@ -12,11 +12,27 @@
 }
 
 :root {
+  color-scheme: dark;
+
   --pad: 16px;
   --gap: 16px;
   --panel-w: 17rem; /* panel width when side-by-side */
   --panel-h: 14rem; /* panel height when stacked */
   --header-h: 3rem; /* reserved height for the site header (title + links) */
+
+  /* Color palette (dark, default). Overridden for light mode below. */
+  --bg: #0d0d0d;
+  --text: #e0e0e0;
+  --text-muted: #aaa;
+  --text-dim: #888;
+  --panel-bg: #181820;
+  --border: rgba(255, 255, 255, 0.12);
+  --btn-border: rgba(255, 255, 255, 0.18);
+  --surface: rgba(255, 255, 255, 0.08);
+  --surface-hover: rgba(255, 255, 255, 0.18);
+  --surface-subtle: rgba(255, 255, 255, 0.06);
+  --surface-subtle-hover: rgba(255, 255, 255, 0.14);
+  --slider-accent: hsl(200, 70%, 55%);
 
   /* Stacked layout (default): canvas above, panel below. */
   --canvas-size: min(
@@ -25,9 +41,29 @@
   );
 }
 
+/* Light palette — follows the browser/OS preference. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    --bg: #fafafa;
+    --text: #1a1a1a;
+    --text-muted: #555;
+    --text-dim: #777;
+    --panel-bg: #ffffff;
+    --border: rgba(0, 0, 0, 0.12);
+    --btn-border: rgba(0, 0, 0, 0.18);
+    --surface: rgba(0, 0, 0, 0.06);
+    --surface-hover: rgba(0, 0, 0, 0.14);
+    --surface-subtle: rgba(0, 0, 0, 0.05);
+    --surface-subtle-hover: rgba(0, 0, 0, 0.12);
+    --slider-accent: hsl(200, 70%, 45%);
+  }
+}
+
 body {
-  background: #0d0d0d;
-  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--text);
   font-family: system-ui, sans-serif;
   font-size: 14px;
   height: 100dvh;
@@ -59,16 +95,16 @@ body {
 
 #header nav {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--text-dim);
 }
 
 #header nav a {
-  color: #aaa;
+  color: var(--text-muted);
   text-decoration: none;
 }
 
 #header nav a:hover {
-  color: #e0e0e0;
+  color: var(--text);
   text-decoration: underline;
 }
 
@@ -118,8 +154,8 @@ body {
   flex-direction: column;
   gap: 1rem;
   padding: 1.25rem;
-  background: #181820;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
 
@@ -133,10 +169,10 @@ body {
   display: flex;
   align-items: center;
   padding: 0.45rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--btn-border);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e0e0e0;
+  background: var(--surface);
+  color: var(--text);
   font-size: 0.875rem;
   cursor: pointer;
   transition: background 0.15s;
@@ -144,7 +180,7 @@ body {
 }
 
 #controls button:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--surface-hover);
 }
 
 #controls button svg {
@@ -191,10 +227,10 @@ body {
   width: 1.25rem;
   height: 1.25rem;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--btn-border);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #aaa;
+  background: var(--surface-subtle);
+  color: var(--text-muted);
   font-size: 0.9rem;
   line-height: 1;
   cursor: pointer;
@@ -204,8 +240,8 @@ body {
 }
 
 .step-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #e0e0e0;
+  background: var(--surface-subtle-hover);
+  color: var(--text);
 }
 
 .setting:has(input:disabled) .step-btn {
@@ -214,21 +250,21 @@ body {
 
 .setting-label {
   font-size: 0.8rem;
-  color: #aaa;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .setting-value {
   font-size: 0.85rem;
-  color: #e0e0e0;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .setting input[type="range"] {
   flex: 1;
   min-width: 0;
-  accent-color: hsl(200, 70%, 55%);
+  accent-color: var(--slider-accent);
   cursor: pointer;
 }
 

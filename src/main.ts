@@ -51,7 +51,7 @@ function loop(): void {
     return;
   }
   if (workerBusy) {
-    console.warn("Worker not ready for next frame - ticks per frame may be too high");
+    // Worker hasn't finished the previous frame; skip to avoid back-pressure.
     return;
   }
 

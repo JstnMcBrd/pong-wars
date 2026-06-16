@@ -116,6 +116,13 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+#fps-counter.fps-warn {
+  color: oklch(85% 0.18 90);
+}
+#fps-counter.fps-danger {
+  color: oklch(65% 0.22 25);
+}
+
 /* ── Settings ─────────────────────────────────────────────────────────────── */
 
 .setting {

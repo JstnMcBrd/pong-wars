@@ -15,6 +15,8 @@ const BOUNDS = {
 } satisfies Record<keyof typeof DEFAULTS, { min: number; max?: number }>;
 
 const FPS_UPDATE_INTERVAL_MS = 500;
+const FPS_WARN_THRESHOLD = 60;
+const FPS_DANGER_THRESHOLD = 30;
 
 function computeMaxTeams(gridSize: number): number {
   const circumference = Math.PI * 2 * (gridSize / 4);
@@ -119,8 +121,16 @@ class Sidebar {
   /** Write the accumulated frame count to the FPS counter and reset it. */
   private updateFps(): void {
     const fps = Math.round(this.fpsFrameCount * (1000 / FPS_UPDATE_INTERVAL_MS));
-    this.fpsCounter.textContent = `${fps} FPS`;
+    const warn = fps < FPS_WARN_THRESHOLD && fps >= FPS_DANGER_THRESHOLD;
+    const danger = fps < FPS_DANGER_THRESHOLD;
+
+    // Reset the frame count for the next interval
     this.fpsFrameCount = 0;
+
+    // Update appearance
+    this.fpsCounter.textContent = `${fps} FPS`;
+    this.fpsCounter.classList.toggle("fps-warn", warn);
+    this.fpsCounter.classList.toggle("fps-danger", danger);
   }
 
   // ── State transitions ───────────────────────────────────────────────────────

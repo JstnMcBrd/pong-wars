@@ -77,7 +77,7 @@ class Canvas {
   private recomputeCellSize(): void {
     this.cellW = this.el.width / this.offscreen.width;
     this.cellH = this.el.height / this.offscreen.height;
-    this.ballRadiusPx = Math.max(Math.min(this.cellW, this.cellH) * 0.45, MIN_BALL_RADIUS_PX);
+    this.ballRadiusPx = Math.max(Math.min(this.cellW, this.cellH) * 0.5, MIN_BALL_RADIUS_PX);
   }
 
   /** Render a frame. Grid size and team colors are reconfigured lazily when they change. */

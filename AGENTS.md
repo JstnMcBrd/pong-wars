@@ -29,14 +29,15 @@ A browser-based multi-ball pong simulation where each ball paints the grid with 
 ### Data flow
 
 ```
-main thread                       Web Worker
-──────────────────────────────    ──────────────────────────────
-main.ts  ────[reset / tick]──────► worker.ts
-                                      │  Rust Simulation (sim)
-                                      │    tick_n(n)
-                                      │    get_grid()           → Uint16Array
-                                      │    get_ball_positions() → Float32Array
- ◄──[frame: grid, cols, rows, balls]──┘  (transferred zero-copy)
+main thread                                   Web Worker
+──────────────────────────────                ──────────────────────────────
+main.ts  ────[reset / tick]───────────────────► worker.ts
+                                                  │  Rust Simulation (sim)
+                                                  │    tick_n(n)
+                                                  │    get_grid()       → Uint16Array
+                                                  │    get_ball_pos_x() → Float32Array
+                                                  │    get_ball_pos_y() → Float32Array
+ ◄──[frame: grid, cols, rows, ballPosX, ballPosY]─┘  (transferred zero-copy)
 canvas.ts  draws frame
 ```
 

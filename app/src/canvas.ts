@@ -29,7 +29,7 @@ function generateColors(n: number): Array<[number, number, number]> {
  * The grid is rendered via a 1px-per-cell OffscreenCanvas blitted up to the
  * main canvas in a single drawImage call (GPU-accelerated, pixel-perfect).
  *
- * The number of teams is inferred from the balls array on each draw() call and
+ * The number of teams is inferred from the ballPosX array on each draw() call and
  * colors are regenerated only when it changes.
  */
 class Canvas {
@@ -51,7 +51,8 @@ class Canvas {
 
   // Cached last frame so redraw() can repaint after a resize.
   private lastGrid: Uint16Array | null = null;
-  private lastBalls: Float32Array | null = null;
+  private lastBallPosX: Float32Array | null = null;
+  private lastBallPosY: Float32Array | null = null;
 
   constructor() {
     this.el = document.getElementById("canvas") as HTMLCanvasElement;
@@ -80,7 +81,13 @@ class Canvas {
   }
 
   /** Render a frame. Grid size and team colors are reconfigured lazily when they change. */
-  public draw(grid: Uint16Array, cols: number, rows: number, balls: Float32Array): void {
+  public draw(
+    grid: Uint16Array,
+    cols: number,
+    rows: number,
+    ballPosX: Float32Array,
+    ballPosY: Float32Array,
+  ): void {
     // Reconfigure the offscreen buffer lazily when the grid size changes.
     if (rows !== this.offscreen.height || cols !== this.offscreen.width) {
       this.offscreen = new OffscreenCanvas(cols, rows);
@@ -90,7 +97,7 @@ class Canvas {
     }
 
     // Regenerate team colors lazily when the number of teams changes.
-    const numTeams = balls.length / 2;
+    const numTeams = ballPosX.length;
     if (numTeams !== this.teamColors.length) {
       this.teamColors = generateColors(numTeams);
       this.teamStrokes = this.teamColors.map(([r, g, b]) => `rgb(${r}, ${g}, ${b})`);
@@ -98,20 +105,21 @@ class Canvas {
 
     // Cache the last frame for redraws after resizes.
     this.lastGrid = grid;
-    this.lastBalls = balls;
+    this.lastBallPosX = ballPosX;
+    this.lastBallPosY = ballPosY;
 
-    this.drawFrame(grid, balls);
+    this.drawFrame(grid, ballPosX, ballPosY);
   }
 
   /** Repaint the last frame at the current canvas size. No-op before the first draw(). */
   private redraw(): void {
-    if (this.lastGrid === null || this.lastBalls === null) {
+    if (this.lastGrid === null || this.lastBallPosX === null || this.lastBallPosY === null) {
       return;
     }
-    this.drawFrame(this.lastGrid, this.lastBalls);
+    this.drawFrame(this.lastGrid, this.lastBallPosX, this.lastBallPosY);
   }
 
-  private drawFrame(grid: Uint16Array, balls: Float32Array): void {
+  private drawFrame(grid: Uint16Array, ballPosX: Float32Array, ballPosY: Float32Array): void {
     // 1. Write cell colors into the tiny offscreen ImageData.
     const data = this.imgData.data;
     for (const [index, teamIndex] of grid.entries()) {
@@ -133,23 +141,26 @@ class Canvas {
     this.ctx.drawImage(this.offscreen, 0, 0, this.el.width, this.el.height);
 
     // 3. Draw balls: white fill + team-colored outline.
-    const n = balls.length / 2;
-    const r = this.ballRadiusPx;
+    const numTeams = ballPosX.length;
     const twoPi = Math.PI * 2;
 
     this.ctx.lineWidth = 2;
     this.ctx.fillStyle = "#ffffff";
 
-    for (let i = 0; i < n; i++) {
-      const bx = balls[i * 2],
-        by = balls[i * 2 + 1];
-      if (bx === undefined || by === undefined) throw new Error(`draw: ball ${i} missing`);
+    for (let i = 0; i < numTeams; i++) {
+      const bx = ballPosX[i],
+        by = ballPosY[i];
+      if (bx === undefined || by === undefined) {
+        throw new Error(`draw: ball ${i} missing`);
+      }
 
       const strokeStyle = this.teamStrokes[i];
-      if (strokeStyle === undefined) throw new Error(`draw: no color for ball ${i}`);
+      if (strokeStyle === undefined) {
+        throw new Error(`draw: no color for ball ${i}`);
+      }
 
       this.ctx.beginPath();
-      this.ctx.arc(bx * this.cellW, by * this.cellH, r, 0, twoPi);
+      this.ctx.arc(bx * this.cellW, by * this.cellH, this.ballRadiusPx, 0, twoPi);
       this.ctx.fill();
       this.ctx.strokeStyle = strokeStyle;
       this.ctx.stroke();

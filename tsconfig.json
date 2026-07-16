@@ -10,7 +10,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
 
-    "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
       "worker": ["./worker/pkg/worker.d.ts"]

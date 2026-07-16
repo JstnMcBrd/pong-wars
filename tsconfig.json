@@ -12,10 +12,10 @@
 
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vite/client"],
     "paths": {
       "worker": ["./worker/pkg/worker"]
     },
+    "types": ["vite/client"],
 
     "noEmit": true,
 

@@ -13,7 +13,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "worker": ["./worker/pkg/worker"]
+      "worker": ["./worker/pkg/worker.d.ts"]
     },
     "types": ["vite/client"],
 

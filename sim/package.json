@@ -1,12 +1,12 @@
 {
-  "name": "wasm",
+  "name": "sim",
   "private": true,
   "license": "MIT",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./pkg/wasm.d.ts",
-      "import": "./pkg/wasm.js"
+      "types": "./pkg/sim.d.ts",
+      "import": "./pkg/sim.js"
     }
   },
   "scripts": {

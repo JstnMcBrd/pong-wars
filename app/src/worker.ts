@@ -22,7 +22,7 @@
  * The Worker never needs to know about canvas pixels or window dimensions.
  */
 
-import { Simulation } from "worker";
+import { Simulation } from "wasm";
 
 let cols = 0;
 let rows = 0;

@@ -1,5 +1,5 @@
 [package]
-name = "worker"
+name = "wasm"
 description = "Rust/Wasm physics engine for pong-wars"
 repository = "https://github.com/JstnMcBrd/pong-wars"
 license = "MIT"

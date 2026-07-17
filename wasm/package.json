@@ -1,12 +1,12 @@
 {
-  "name": "worker",
+  "name": "wasm",
   "private": true,
   "license": "MIT",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./pkg/worker.d.ts",
-      "import": "./pkg/worker.js"
+      "types": "./pkg/wasm.d.ts",
+      "import": "./pkg/wasm.js"
     }
   },
   "scripts": {

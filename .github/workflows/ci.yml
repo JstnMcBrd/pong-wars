@@ -32,12 +32,11 @@ jobs:
       - name: Install dependencies
         run: npm clean-install
 
-      - name: Format TypeScript
-        run: npm run fmt -- --check
+      - name: Format
+        run: npm run fmt
 
-      - name: Format Rust
-        working-directory: worker
-        run: cargo fmt --check
+      - name: Check for changes
+        run: git diff --exit-code
 
   lint:
     name: Lint
@@ -60,12 +59,8 @@ jobs:
       - name: Install dependencies
         run: npm clean-install
 
-      - name: Lint TypeScript
+      - name: Lint
         run: npm run lint
-
-      - name: Lint Rust
-        working-directory: worker
-        run: cargo clippy -- -D warnings
 
   check:
     name: Check
@@ -88,16 +83,12 @@ jobs:
       - name: Install dependencies
         run: npm clean-install
 
-        # Need to generate type definitions before type-checking
-      - name: Generate WebAssembly bindings
-        run: npx wasm-pack build worker --dev
+        # Build the worker first so its generated type definitions exist for the app's type-check
+      - name: Build worker bindings
+        run: npm run build -w worker -- --dev
 
-      - name: Check TypeScript
+      - name: Check
         run: npm run check
-
-      - name: Check Rust
-        working-directory: worker
-        run: cargo check
 
   build:
     name: Build

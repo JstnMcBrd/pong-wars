@@ -3,24 +3,13 @@
   "private": true,
   "license": "MIT",
   "type": "module",
+  "workspaces": ["worker", "app"],
   "scripts": {
-    "dev": "wasm-pack build worker --profiling && vite",
-    "build": "wasm-pack build worker && tsc && vite build",
-    "preview": "vite preview",
-    "fmt": "oxfmt",
-    "lint": "oxlint",
-    "check": "tsc"
-  },
-  "dependencies": {
-    "lucide": "^1.17.0",
-    "vite-plugin-wasm": "^3.6.0"
-  },
-  "devDependencies": {
-    "oxfmt": "^0.54.0",
-    "oxlint": "^1.69.0",
-    "oxlint-tsgolint": "^0.25.0",
-    "typescript": "^7.0.2",
-    "vite": "^8.0.16",
-    "wasm-pack": "^0.15.0"
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "preview": "npm run preview -w app",
+    "fmt": "npm run fmt --workspaces",
+    "lint": "npm run lint --workspaces",
+    "check": "npm run check --workspaces"
   }
 }

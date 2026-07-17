@@ -1,0 +1,23 @@
+{
+  "name": "worker",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./pkg/worker.d.ts",
+      "import": "./pkg/worker.js"
+    }
+  },
+  "scripts": {
+    "dev": "wasm-pack build --profiling",
+    "build": "wasm-pack build",
+    "check": "cargo check",
+    "fmt": "cargo fmt",
+    "lint": "cargo clippy -- -D warnings"
+  },
+  "devDependencies": {
+    "wasm-pack": "^0.15.0"
+  }
+}

@@ -6,7 +6,7 @@ Keep `AGENTS.md` and `README.md` up-to-date whenever you modify the project.
 
 ## Commands
 
-The repo is an npm workspace with two packages: `app` (the Vite UI) and `wasm` (the Rust/Wasm engine). Root scripts fan out across both; target one with `-w`.
+The repo is an npm workspace with two packages: `app` (the Vite UI) and `wasm` (the Rust/Wasm engine). Root scripts fan out across both; target one with `--workspace=...`.
 
 ```bash
 npm install         # Install dependencies

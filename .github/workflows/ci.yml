@@ -85,7 +85,7 @@ jobs:
 
         # Must generate wasm type definitions before type-checking app
       - name: Build wasm bindings
-        run: npm run build -w wasm -- --dev
+        run: npm run build --workspace=wasm -- --dev
 
       - name: Check
         run: npm run check

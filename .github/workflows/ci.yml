@@ -83,7 +83,7 @@ jobs:
       - name: Install dependencies
         run: npm clean-install
 
-        # Build the worker first so its generated type definitions exist for the app's type-check
+        # Must generate worker type definitions before type-checking app
       - name: Build worker bindings
         run: npm run build -w worker -- --dev
 

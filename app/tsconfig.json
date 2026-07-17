@@ -11,9 +11,6 @@
     "noUnusedParameters": true,
 
     "moduleResolution": "bundler",
-    "paths": {
-      "worker": ["./worker/pkg/worker.d.ts"]
-    },
     "types": ["vite/client"],
 
     "noEmit": true,

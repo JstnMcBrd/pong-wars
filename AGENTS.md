@@ -6,26 +6,21 @@ Keep `AGENTS.md` and `README.md` up-to-date whenever you modify the project.
 
 ## Commands
 
+The repo is an npm workspace with two packages: `app` (the Vite UI) and `worker` (the Rust/Wasm engine). Root scripts fan out across both; target one with `-w`.
+
 ```bash
-# Full project
-npm install         # Install JS dependencies
+npm install         # Install dependencies
 npm run dev         # Dev server (builds Wasm first, then starts Vite)
 npm run build       # Production build
 npm run preview     # Preview production build
-
-# UI
 npm run fmt         # Format
 npm run lint        # Lint
-npm run check       # Type-check
-
-# Worker
-cd worker
-cargo fmt           # Format
-cargo clippy        # Lint
-cargo check         # Compile-check
+npm run check       # Type-check (note: worker bindings must be built first to pass app type-check)
 ```
 
-There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any build that touches the Wasm crate.
+There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any build that touches the Wasm crate (`wasm-pack` installs it automatically).
+
+The app imports the worker as a normal workspace package (`import … from "worker"`). The worker's `package.json` points at its generated `pkg/` output.
 
 ## Architecture
 
@@ -45,10 +40,10 @@ main.ts  ────[reset / tick]──────► worker.ts
 canvas.ts  draws frame
 ```
 
-- `main.ts` — orchestration layer. Wires the singletons together and drives the per-frame loop, sending one `tick` to the worker per frame with back-pressure to avoid overrunning it.
-- `worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
-- `sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
-- `canvas.ts` — `Canvas` singleton. Renders each frame by drawing a 1px-per-cell `OffscreenCanvas` scaled up to the display size, kept in sync with the CSS-rendered size by a `ResizeObserver`.
+- `app/src/main.ts` — orchestration layer. Wires the singletons together and drives the per-frame loop, sending one `tick` to the worker per frame with back-pressure to avoid overrunning it.
+- `app/src/worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
+- `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
+- `app/src/canvas.ts` — `Canvas` singleton. Renders each frame by drawing a 1px-per-cell `OffscreenCanvas` scaled up to the display size, kept in sync with the CSS-rendered size by a `ResizeObserver`.
 - `worker/src/lib.rs` — the physics engine. `Simulation` stores grid, positions, and directions as flat `Vec`s in grid-space. Each tick: move → wall-bounce → cell-collision.
 
 ### Layout and canvas sizing
@@ -61,11 +56,11 @@ All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts t
 
 ### TypeScript strictness
 
-`tsconfig.json` enables a large set of strict checks. Ensure correctness by type-checking after edits.
+`app/tsconfig.json` enables a large set of strict checks. Ensure correctness by type-checking after edits.
 
 ### Vite base path
 
-`vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment. Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically. Hardcoded URL strings in JS/TS are not rewritten and will break under the subpath.
+`app/vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment. Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically. Hardcoded URL strings in JS/TS are not rewritten and will break under the subpath.
 
 ## Deployment
 

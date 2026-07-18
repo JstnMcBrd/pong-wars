@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "workspaces": ["worker", "app"],
+  "workspaces": ["sim", "app"],
   "scripts": {
     "dev": "npm run dev --workspaces",
     "build": "npm run build --workspaces",

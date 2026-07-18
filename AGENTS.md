@@ -6,7 +6,7 @@ Keep `AGENTS.md` and `README.md` up-to-date whenever you modify the project.
 
 ## Commands
 
-The repo is an npm workspace with two packages: `app` (the Vite UI) and `worker` (the Rust/Wasm engine). Root scripts fan out across both; target one with `-w`.
+The repo is an npm workspace with two packages: `app` (the Vite UI) and `sim` (the Rust/Wasm physics engine). Root scripts fan out across both; target one with `--workspace=...`.
 
 ```bash
 npm install         # Install dependencies
@@ -15,12 +15,12 @@ npm run build       # Production build
 npm run preview     # Preview production build
 npm run fmt         # Format
 npm run lint        # Lint
-npm run check       # Type-check (note: worker bindings must be built first to pass app type-check)
+npm run check       # Type-check (note: sim bindings must be built first to pass app type-check)
 ```
 
 There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any build that touches the Wasm crate (`wasm-pack` installs it automatically).
 
-The app imports the worker as a normal workspace package (`import … from "worker"`). The worker's `package.json` points at its generated `pkg/` output.
+The app imports the physics engine as a normal workspace package (`import … from "sim"`). The `sim` package's `package.json` points at its generated `pkg/` output.
 
 ## Architecture
 
@@ -32,7 +32,7 @@ A browser-based multi-ball pong simulation where each ball paints the grid with 
 main thread                       Web Worker
 ──────────────────────────────    ──────────────────────────────
 main.ts  ────[reset / tick]──────► worker.ts
-                                      │  Rust Simulation (worker)
+                                      │  Rust Simulation (sim)
                                       │    tick_n(n)
                                       │    get_grid()           → Uint16Array
                                       │    get_ball_positions() → Float32Array
@@ -44,7 +44,7 @@ canvas.ts  draws frame
 - `app/src/worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
 - `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
 - `app/src/canvas.ts` — `Canvas` singleton. Renders each frame by drawing a 1px-per-cell `OffscreenCanvas` scaled up to the display size, kept in sync with the CSS-rendered size by a `ResizeObserver`.
-- `worker/src/lib.rs` — the physics engine. `Simulation` stores grid, positions, and directions as flat `Vec`s in grid-space. Each tick: move → wall-bounce → cell-collision.
+- `sim/src/lib.rs` — the physics engine. `Simulation` stores grid, positions, and directions as flat `Vec`s in grid-space. Each tick: move → wall-bounce → cell-collision.
 
 ### Layout and canvas sizing
 

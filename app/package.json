@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "lucide": "^1.17.0",
-    "vite-plugin-wasm": "^3.6.0",
-    "worker": "*"
+    "sim": "*",
+    "vite-plugin-wasm": "^3.6.0"
   },
   "devDependencies": {
     "oxfmt": "^0.54.0",

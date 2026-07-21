@@ -10,9 +10,10 @@
     "noUnusedParameters": true,
 
     "moduleResolution": "bundler",
-    "types": ["vite/client", "node"],
+    "types": ["vite/client"],
 
     "noEmit": true,
+    "skipLibCheck": true,
 
     "lib": ["ESNext", "DOM"],
     "target": "esnext"

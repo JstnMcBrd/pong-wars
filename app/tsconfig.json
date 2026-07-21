@@ -1,5 +1,4 @@
 {
-  "include": ["src"],
   "compilerOptions": {
     "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
@@ -16,6 +15,8 @@
     "noEmit": true,
 
     "lib": ["ESNext", "DOM"],
-    "target": "esnext"
+    "target": "esnext",
+
+    "skipLibCheck": true // https://github.com/vitejs/vite/issues/7598
   }
 }

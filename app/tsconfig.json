@@ -13,9 +13,7 @@
     "types": ["vite/client"],
 
     "noEmit": true,
-    // Without this, checking vite.config.ts fails on vite's own Node-dependent
-    // types unless @types/node is installed, which then leaks Node's ambient
-    // globals into the rest of the (browser) program: https://github.com/vitejs/vite/issues/7598
+    // https://github.com/vitejs/vite/issues/7598
     "skipLibCheck": true,
 
     "lib": ["ESNext", "DOM"],

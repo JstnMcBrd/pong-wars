@@ -1,5 +1,4 @@
 {
-  "include": ["src"],
   "compilerOptions": {
     "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
@@ -11,7 +10,7 @@
     "noUnusedParameters": true,
 
     "moduleResolution": "bundler",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
 
     "noEmit": true,
 

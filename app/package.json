@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "fmt": "oxfmt",
     "lint": "oxlint",
@@ -17,6 +17,7 @@
     "vite-plugin-wasm": "^3.6.0"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "oxfmt": "^0.54.0",
     "oxlint": "^1.69.0",
     "oxlint-tsgolint": "^0.25.0",

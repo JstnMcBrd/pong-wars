@@ -56,7 +56,7 @@ All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts t
 
 ### TypeScript strictness
 
-`app/tsconfig.json` enables a large set of strict checks. Ensure correctness by type-checking after edits.
+`app/tsconfig.json` enables a large set of strict checks and covers the whole `app` package, including `vite.config.ts` itself (not just `src`). `"node"` is included in `types` so the config file resolves against Vite's own Node-dependent types; browser code that touches ambiguous globals (e.g. `setInterval`/`setTimeout`) should use `ReturnType<typeof ...>` rather than hardcoding `number`, since Node's ambient types override the DOM ones. `npm run build` runs `vite build` directly and does not type-check — use `npm run check` for that. Ensure correctness by type-checking after edits.
 
 ### Vite base path
 

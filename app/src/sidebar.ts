@@ -53,7 +53,7 @@ class Sidebar {
 
   private readonly fpsCounter: HTMLSpanElement;
   private fpsFrameCount = 0;
-  private fpsInterval = 0;
+  private fpsInterval: ReturnType<typeof setInterval> | undefined;
 
   private _state: SimState = "preview";
   private resetCb: (() => void) | null = null;

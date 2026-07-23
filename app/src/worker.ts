@@ -9,10 +9,10 @@
  *   worker → main:  { type: 'ready' }
  *
  *   main → worker:  { type: 'reset', numCols: number, numRows: number, numTeams: number }
- *   worker → main:  { type: 'frame', grid: Uint16Array, cols: number, rows: number, balls: Float32Array }
+ *   worker → main:  { type: 'frame', grid: Uint16Array, cols: number, rows: number, ballPosX: Float32Array, ballPosY: Float32Array }
  *
  *   main → worker:  { type: 'tick', ticks: number }
- *   worker → main:  { type: 'frame', grid: Uint16Array, cols: number, rows: number, balls: Float32Array }
+ *   worker → main:  { type: 'frame', grid: Uint16Array, cols: number, rows: number, ballPosX: Float32Array, ballPosY: Float32Array }
  *
  * Balls layout: [x,y]×N
  *
@@ -44,17 +44,19 @@ onmessage = function (e: MessageEvent<WorkerMessage>) {
     sim = new Simulation(cols, rows, msg.numTeams);
 
     const grid = sim.get_grid().slice();
-    const balls = sim.get_ball_positions().slice();
-    const frame: WorkerReply = { type: "frame", grid, cols, rows, balls };
-    postMessage(frame, [grid.buffer, balls.buffer]);
+    const ballPosX = sim.get_ball_pos_x().slice();
+    const ballPosY = sim.get_ball_pos_y().slice();
+    const frame: WorkerReply = { type: "frame", grid, cols, rows, ballPosX, ballPosY };
+    postMessage(frame, [grid.buffer, ballPosX.buffer, ballPosY.buffer]);
   }
 
   if (msg.type === "tick") {
     sim.tick_n(msg.ticks);
     const grid = sim.get_grid().slice();
-    const balls = sim.get_ball_positions().slice();
-    const frame: WorkerReply = { type: "frame", grid, cols, rows, balls };
-    postMessage(frame, [grid.buffer, balls.buffer]);
+    const ballPosX = sim.get_ball_pos_x().slice();
+    const ballPosY = sim.get_ball_pos_y().slice();
+    const frame: WorkerReply = { type: "frame", grid, cols, rows, ballPosX, ballPosY };
+    postMessage(frame, [grid.buffer, ballPosX.buffer, ballPosY.buffer]);
   }
 };
 
@@ -76,4 +78,11 @@ export type WorkerMessage =
 
 export type WorkerReply =
   | { type: "ready" }
-  | { type: "frame"; grid: Uint16Array; cols: number; rows: number; balls: Float32Array };
+  | {
+      type: "frame";
+      grid: Uint16Array;
+      cols: number;
+      rows: number;
+      ballPosX: Float32Array;
+      ballPosY: Float32Array;
+    };

@@ -53,7 +53,7 @@ A minimalist `#header` (title and attribution links) sits at the top of the `bod
 
 ### Coordinate space
 
-All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts to pixel-space. `TICK_VELOCITY` and `BALL_RADIUS` are both `0.45` grid units — chosen so the bounding box covers at most 4 cells per tick, preventing tunnelling.
+All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts to pixel-space.
 
 ### TypeScript strictness
 

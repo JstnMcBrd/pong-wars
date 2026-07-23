@@ -2,13 +2,13 @@ use js_sys::Float32Array;
 use js_sys::Uint16Array;
 use wasm_bindgen::prelude::*;
 
-/// Fraction of a cell that the ball moves per tick.
-/// Must be < 0.5 to guarantee no cell skipping.
-const TICK_VELOCITY: f32 = 0.45;
+/// Ball radius in grid-space units. 0.5 radius gives a 1-cell diameter
+/// so the collision bounding box covers at most 4 cells.
+const BALL_RADIUS: f32 = 0.5;
 
-/// Ball radius in grid-space units (same as TICK_VELOCITY so the
-/// collision bounding box always covers at most 4 cells).
-const BALL_RADIUS: f32 = 0.45;
+/// Fraction of a cell that the ball moves per tick.
+/// Must be <= 2 * BALL_RADIUS to guarantee no cell skipping.
+const TICK_VELOCITY: f32 = 0.5;
 
 #[wasm_bindgen]
 pub struct Simulation {

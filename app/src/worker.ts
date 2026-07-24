@@ -9,14 +9,15 @@
  *   worker → main:  { type: 'ready' }
  *
  *   main → worker:  { type: 'reset', numCols: number, numRows: number, numTeams: number }
- *   worker → main:  { type: 'frame', grid: Uint16Array, cols: number, rows: number, ballPosX: Float32Array, ballPosY: Float32Array }
+ *   worker → main:  { type: 'frame', pixels: Uint8ClampedArray, cols: number, rows: number, ballPosX: Float32Array, ballPosY: Float32Array }
  *
  *   main → worker:  { type: 'tick', ticks: number }
- *   worker → main:  { type: 'frame', grid: Uint16Array, cols: number, rows: number, ballPosX: Float32Array, ballPosY: Float32Array }
+ *   worker → main:  { type: 'frame', pixels: Uint8ClampedArray, cols: number, rows: number, ballPosX: Float32Array, ballPosY: Float32Array }
  *
- * Balls layout: [x,y]×N
+ * `pixels` is a flat RGBA buffer painted by the Rust engine (1 pixel per cell),
+ * ready to construct an ImageData from directly. Balls layout: [x,y]×N.
  *
- * Both ArrayBuffers are transferred zero-copy.
+ * All ArrayBuffers are transferred zero-copy.
  *
  * All coordinates returned are in grid-space units.
  * The Worker never needs to know about canvas pixels or window dimensions.
@@ -43,20 +44,20 @@ onmessage = function (e: MessageEvent<WorkerMessage>) {
     rows = msg.numRows;
     sim = new Simulation(cols, rows, msg.numTeams);
 
-    const grid = sim.get_grid().slice();
-    const ballPosX = sim.get_ball_pos_x().slice();
-    const ballPosY = sim.get_ball_pos_y().slice();
-    const frame: WorkerReply = { type: "frame", grid, cols, rows, ballPosX, ballPosY };
-    postMessage(frame, [grid.buffer, ballPosX.buffer, ballPosY.buffer]);
+    const pixels = sim.get_pixels();
+    const ballPosX = sim.get_ball_pos_x();
+    const ballPosY = sim.get_ball_pos_y();
+    const frame: WorkerReply = { type: "frame", pixels, cols, rows, ballPosX, ballPosY };
+    postMessage(frame, [pixels.buffer, ballPosX.buffer, ballPosY.buffer]);
   }
 
   if (msg.type === "tick") {
     sim.tick_n(msg.ticks);
-    const grid = sim.get_grid().slice();
-    const ballPosX = sim.get_ball_pos_x().slice();
-    const ballPosY = sim.get_ball_pos_y().slice();
-    const frame: WorkerReply = { type: "frame", grid, cols, rows, ballPosX, ballPosY };
-    postMessage(frame, [grid.buffer, ballPosX.buffer, ballPosY.buffer]);
+    const pixels = sim.get_pixels();
+    const ballPosX = sim.get_ball_pos_x();
+    const ballPosY = sim.get_ball_pos_y();
+    const frame: WorkerReply = { type: "frame", pixels, cols, rows, ballPosX, ballPosY };
+    postMessage(frame, [pixels.buffer, ballPosX.buffer, ballPosY.buffer]);
   }
 };
 
@@ -80,7 +81,7 @@ export type WorkerReply =
   | { type: "ready" }
   | {
       type: "frame";
-      grid: Uint16Array;
+      pixels: Uint8ClampedArray;
       cols: number;
       rows: number;
       ballPosX: Float32Array;

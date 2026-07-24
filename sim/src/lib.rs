@@ -1,5 +1,8 @@
+mod color;
+
+use color::{Rgba, color_palette};
 use js_sys::Float32Array;
-use js_sys::Uint16Array;
+use js_sys::Uint8ClampedArray;
 use wasm_bindgen::prelude::*;
 
 /// Ball radius in grid-space units. 0.5 radius gives a 1-cell diameter
@@ -8,7 +11,7 @@ const BALL_RADIUS: f32 = 0.5;
 
 /// Fraction of a cell that the ball moves per tick.
 /// Must be <= 2 * BALL_RADIUS to guarantee no cell skipping.
-const TICK_VELOCITY: f32 = 0.5;
+const TICK_DISTANCE: f32 = 0.5;
 
 #[wasm_bindgen]
 pub struct Simulation {
@@ -16,8 +19,14 @@ pub struct Simulation {
     num_rows: usize,
     num_teams: usize,
 
-    /// Layout: `grid[col + row * grid_cols] = team index`
-    grid: Vec<u16>,
+    /// The color assigned to each team.
+    team_colors: Vec<Rgba>,
+
+    /// The grid as a flat RGBA pixel buffer, ready to hand to the canvas.
+    /// A cell's color is its owning team's color.
+    ///
+    /// Layout: `idx = (col + row * num_cols) * 4, pixels[idx..idx+4] = [R, G, B, A]`.
+    pixels: Vec<u8>,
 
     /// Layout: `[x_0, x_1, …, x_n]` where `n=num_teams-1`
     ball_pos_x: Vec<f32>,
@@ -44,7 +53,9 @@ impl Simulation {
             panic!("num_teams cannot exceed {}", u16::MAX);
         }
 
-        let grid = vec![0; num_cols * num_rows];
+        let team_colors = color_palette(num_teams);
+
+        let pixels = vec![0; num_cols * num_rows * 4];
         let ball_pos_x = vec![0.0; num_teams];
         let ball_pos_y = vec![0.0; num_teams];
         let ball_dir_x = vec![0.0; num_teams];
@@ -55,7 +66,8 @@ impl Simulation {
             num_rows,
             num_teams,
 
-            grid,
+            team_colors,
+            pixels,
             ball_pos_x,
             ball_pos_y,
             ball_dir_x,
@@ -72,43 +84,31 @@ impl Simulation {
         }
     }
 
-    /// Return a view of the grid as a flat `Uint16Array`.
+    /// Return an owned copy of the grid as a flat RGBA `Uint8ClampedArray`.
     ///
-    /// Layout: `grid[col + row * grid_cols] = team index`.
-    ///
-    /// # Safety
-    ///
-    /// Provides a direct view into Wasm linear memory. The caller must not hold
-    /// this view across any Rust call that could reallocate the backing `Vec`.
-    /// Copy the data out before passing it between threads.
-    pub unsafe fn get_grid(&self) -> Uint16Array {
-        unsafe { Uint16Array::view(&self.grid) }
+    /// Layout: `idx = (col + row * num_cols) * 4, pixels[idx..idx+4] = [R, G, B, A]`.
+    pub fn get_pixels(&self) -> Uint8ClampedArray {
+        let arr = Uint8ClampedArray::new_with_length(self.pixels.len() as u32);
+        arr.copy_from(&self.pixels);
+        arr
     }
 
-    /// Return a view of all ball x positions as a flat `Float32Array`.
+    /// Return an owned copy of all ball x positions as a flat `Float32Array`.
     ///
     /// Layout: `[x_0, x_1, …]` in grid-space units.
-    ///
-    /// # Safety
-    ///
-    /// Provides a direct view into Wasm linear memory. The caller must not hold
-    /// this view across any Rust call that could reallocate the backing `Vec`.
-    /// Copy the data out before passing it between threads.
-    pub unsafe fn get_ball_pos_x(&self) -> Float32Array {
-        unsafe { Float32Array::view(&self.ball_pos_x) }
+    pub fn get_ball_pos_x(&self) -> Float32Array {
+        let arr = Float32Array::new_with_length(self.ball_pos_x.len() as u32);
+        arr.copy_from(&self.ball_pos_x);
+        arr
     }
 
-    /// Return a view of all ball y positions as a flat `Float32Array`.
+    /// Return an owned copy of all ball y positions as a flat `Float32Array`.
     ///
     /// Layout: `[y_0, y_1, …, y_n]` in grid-space units.
-    ///
-    /// # Safety
-    ///
-    /// Provides a direct view into Wasm linear memory. The caller must not hold
-    /// this view across any Rust call that could reallocate the backing `Vec`.
-    /// Copy the data out before passing it between threads.
-    pub unsafe fn get_ball_pos_y(&self) -> Float32Array {
-        unsafe { Float32Array::view(&self.ball_pos_y) }
+    pub fn get_ball_pos_y(&self) -> Float32Array {
+        let arr = Float32Array::new_with_length(self.ball_pos_y.len() as u32);
+        arr.copy_from(&self.ball_pos_y);
+        arr
     }
 }
 
@@ -140,7 +140,7 @@ impl Simulation {
         let half_sector = std::f32::consts::TAU / (2.0 * num_teams_f);
         for row in 0..self.num_rows {
             for col in 0..self.num_cols {
-                let idx = col + row * self.num_cols;
+                let idx = (col + row * self.num_cols) * 4;
 
                 let dx = col as f32 + 0.5 - center_x;
                 let dy = row as f32 + 0.5 - center_y;
@@ -148,8 +148,8 @@ impl Simulation {
                 let phi = (dy.atan2(dx).rem_euclid(std::f32::consts::TAU) + half_sector)
                     % std::f32::consts::TAU;
 
-                let team = (phi / std::f32::consts::TAU * num_teams_f) as u16;
-                self.grid[idx] = team;
+                let team = (phi / std::f32::consts::TAU * num_teams_f) as usize;
+                self.pixels[idx..idx + 4].copy_from_slice(&self.team_colors[team]);
             }
         }
     }
@@ -161,14 +161,14 @@ impl Simulation {
     }
 
     fn update_ball(&mut self, team: usize) {
-        let width: f32 = self.num_cols as f32;
+        let width = self.num_cols as f32;
         let height = self.num_rows as f32;
-        let team_u16 = team as u16;
+        let team_color = self.team_colors[team];
 
         // 1. Move
 
-        self.ball_pos_x[team] += self.ball_dir_x[team] * TICK_VELOCITY;
-        self.ball_pos_y[team] += self.ball_dir_y[team] * TICK_VELOCITY;
+        self.ball_pos_x[team] += self.ball_dir_x[team] * TICK_DISTANCE;
+        self.ball_pos_y[team] += self.ball_dir_y[team] * TICK_DISTANCE;
 
         // 2. Wall bounce — clamp position to prevent corner-sticking.
         // TODO Maybe instead of clamping, consider reflecting off the wall and moving the remaining distance?
@@ -195,6 +195,7 @@ impl Simulation {
         // Bounding box of the ball's circle in cell coordinates.
         // Because grid-space position == cell index, floor() gives the cell directly.
         // TODO Consider using ball radius to calculate a circular bounding area
+        // FIXME Does this create a square collider area?
         let col_min = (self.ball_pos_x[team] - BALL_RADIUS).max(0.0) as usize;
         let col_max = (self.ball_pos_x[team] + BALL_RADIUS).min(width - 1.0) as usize;
         let row_min = (self.ball_pos_y[team] - BALL_RADIUS).max(0.0) as usize;
@@ -205,9 +206,9 @@ impl Simulation {
 
         for row in row_min..=row_max {
             for col in col_min..=col_max {
-                let idx = col + row * self.num_cols;
-                if self.grid[idx] != team_u16 {
-                    self.grid[idx] = team_u16;
+                let idx = (col + row * self.num_cols) * 4;
+                if self.pixels[idx..idx + 4] != team_color {
+                    self.pixels[idx..idx + 4].copy_from_slice(&team_color);
 
                     // Determine reflection axis from the cell center → ball vector.
                     let cell_cx = col as f32 + 0.5;

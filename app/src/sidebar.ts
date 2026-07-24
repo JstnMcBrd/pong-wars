@@ -3,14 +3,14 @@ type SimState = "preview" | "running" | "paused";
 // ── Defaults and bounds ──────────────────────────────────────────────────────
 
 const DEFAULTS = {
-  numTeams: 2,
   gridSize: 26,
+  numTeams: 2,
   ticksPerFrame: 1,
 };
 
 const BOUNDS = {
-  numTeams: { min: 2 },
   gridSize: { min: 10, max: 500 },
+  numTeams: { min: 2 },
   ticksPerFrame: { min: 1, max: 500 },
 } satisfies Record<keyof typeof DEFAULTS, { min: number; max?: number }>;
 
@@ -27,7 +27,7 @@ function computeMaxTeams(gridSize: number): number {
 
 /**
  * DOM wrapper for the sidebar panel. Owns the simulation control buttons
- * (start/stop/pause/resume) and the settings sliders (teams/size/speed),
+ * (start/stop/pause/resume) and the settings sliders (size/teams/speed),
  * tracks the {@link SimState}, and exposes the live setting values.
  */
 class Sidebar {
@@ -36,15 +36,15 @@ class Sidebar {
   private readonly btnPause: HTMLButtonElement;
   private readonly btnResume: HTMLButtonElement;
 
-  private readonly inpTeams: HTMLInputElement;
-  private readonly valTeams: HTMLSpanElement;
-  private readonly decTeams: HTMLButtonElement;
-  private readonly incTeams: HTMLButtonElement;
-
   private readonly inpSize: HTMLInputElement;
   private readonly valSize: HTMLSpanElement;
   private readonly decSize: HTMLButtonElement;
   private readonly incSize: HTMLButtonElement;
+
+  private readonly inpTeams: HTMLInputElement;
+  private readonly valTeams: HTMLSpanElement;
+  private readonly decTeams: HTMLButtonElement;
+  private readonly incTeams: HTMLButtonElement;
 
   private readonly inpSpeed: HTMLInputElement;
   private readonly valSpeed: HTMLSpanElement;
@@ -64,15 +64,15 @@ class Sidebar {
     this.btnPause = document.getElementById("btn-pause") as HTMLButtonElement;
     this.btnResume = document.getElementById("btn-resume") as HTMLButtonElement;
 
-    this.inpTeams = document.getElementById("inp-teams") as HTMLInputElement;
-    this.valTeams = document.getElementById("val-teams") as HTMLSpanElement;
-    this.decTeams = document.getElementById("dec-teams") as HTMLButtonElement;
-    this.incTeams = document.getElementById("inc-teams") as HTMLButtonElement;
-
     this.inpSize = document.getElementById("inp-size") as HTMLInputElement;
     this.valSize = document.getElementById("val-size") as HTMLSpanElement;
     this.decSize = document.getElementById("dec-size") as HTMLButtonElement;
     this.incSize = document.getElementById("inc-size") as HTMLButtonElement;
+
+    this.inpTeams = document.getElementById("inp-teams") as HTMLInputElement;
+    this.valTeams = document.getElementById("val-teams") as HTMLSpanElement;
+    this.decTeams = document.getElementById("dec-teams") as HTMLButtonElement;
+    this.incTeams = document.getElementById("inc-teams") as HTMLButtonElement;
 
     this.inpSpeed = document.getElementById("inp-speed") as HTMLInputElement;
     this.valSpeed = document.getElementById("val-speed") as HTMLSpanElement;
@@ -96,11 +96,11 @@ class Sidebar {
 
   // ── DOM-backed setting getters ──────────────────────────────────────────────
 
-  public get numTeams(): number {
-    return this.inpTeams.valueAsNumber;
-  }
   public get gridSize(): number {
     return this.inpSize.valueAsNumber;
+  }
+  public get numTeams(): number {
+    return this.inpTeams.valueAsNumber;
   }
   public get ticksPerFrame(): number {
     return this.inpSpeed.valueAsNumber;
@@ -150,24 +150,24 @@ class Sidebar {
       clearInterval(this.fpsInterval);
     }
 
-    // Lock the reset-required sliders (teams, size) while the simulation is active.
+    // Lock the reset-required sliders (size, teams) while the simulation is active.
     const locked = state !== "preview";
-    this.inpTeams.disabled = locked;
     this.inpSize.disabled = locked;
+    this.inpTeams.disabled = locked;
   }
 
   // ── Private setup ─────────────────────────────────────────────────────────
 
   private initSliders(): void {
-    this.inpTeams.min = String(BOUNDS.numTeams.min);
-    this.inpTeams.max = String(computeMaxTeams(DEFAULTS.gridSize));
-    this.inpTeams.value = String(DEFAULTS.numTeams);
-    this.valTeams.textContent = String(DEFAULTS.numTeams);
-
     this.inpSize.min = String(BOUNDS.gridSize.min);
     this.inpSize.max = String(BOUNDS.gridSize.max);
     this.inpSize.value = String(DEFAULTS.gridSize);
     this.valSize.textContent = `${DEFAULTS.gridSize}x${DEFAULTS.gridSize}`;
+
+    this.inpTeams.min = String(BOUNDS.numTeams.min);
+    this.inpTeams.max = String(computeMaxTeams(DEFAULTS.gridSize));
+    this.inpTeams.value = String(DEFAULTS.numTeams);
+    this.valTeams.textContent = String(DEFAULTS.numTeams);
 
     this.inpSpeed.min = String(BOUNDS.ticksPerFrame.min);
     this.inpSpeed.max = String(BOUNDS.ticksPerFrame.max);
@@ -204,11 +204,11 @@ class Sidebar {
   }
 
   private wireStepButtons(): void {
-    this.decTeams.addEventListener("click", () => this.step(this.inpTeams, -1));
-    this.incTeams.addEventListener("click", () => this.step(this.inpTeams, +1));
-
     this.decSize.addEventListener("click", () => this.step(this.inpSize, -1));
     this.incSize.addEventListener("click", () => this.step(this.inpSize, +1));
+
+    this.decTeams.addEventListener("click", () => this.step(this.inpTeams, -1));
+    this.incTeams.addEventListener("click", () => this.step(this.inpTeams, +1));
 
     this.decSpeed.addEventListener("click", () => this.step(this.inpSpeed, -1));
     this.incSpeed.addEventListener("click", () => this.step(this.inpSpeed, +1));

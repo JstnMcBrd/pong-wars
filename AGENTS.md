@@ -34,10 +34,10 @@ main thread                                   Web Worker
 main.ts  ────[reset / tick]───────────────────► worker.ts
                                                   │  Rust Simulation (sim)
                                                   │    tick_n(n)
-                                                  │    get_grid()       → Uint16Array
+                                                  │    get_pixels()     → Uint8ClampedArray (RGBA)
                                                   │    get_ball_pos_x() → Float32Array
                                                   │    get_ball_pos_y() → Float32Array
- ◄──[frame: grid, cols, rows, ballPosX, ballPosY]─┘  (transferred zero-copy)
+ ◄─[frame: pixels, cols, rows, ballPosX, ballPosY]┘  (transferred zero-copy)
 canvas.ts  draws frame
 ```
 
@@ -45,7 +45,7 @@ canvas.ts  draws frame
 - `app/src/worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
 - `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
 - `app/src/canvas.ts` — `Canvas` singleton. Renders each frame by drawing a 1px-per-cell `OffscreenCanvas` scaled up to the display size, kept in sync with the CSS-rendered size by a `ResizeObserver`.
-- `sim/src/lib.rs` — the physics engine. `Simulation` stores grid, positions, and directions as flat `Vec`s in grid-space. Each tick: move → wall-bounce → cell-collision.
+- `sim/src/lib.rs` — the physics engine. `Simulation` stores the grid as a flat RGBA pixel `Vec` (plus positions and directions as flat `Vec`s) in grid-space, and owns the team color palette. Each tick: move → wall-bounce → cell-collision.
 
 ### Layout and canvas sizing
 

@@ -1,4 +1,4 @@
-const MIN_BALL_RADIUS_PX = 3;
+const MIN_BALL_RADIUS_PX = 1;
 
 /**
  * DOM wrapper for the <canvas> element. Handles all drawing and keeps the

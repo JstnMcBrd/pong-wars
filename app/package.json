@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "fmt": "oxfmt",
     "lint": "oxlint",
-    "check": "tsc"
+    "check": "tsc --build"
   },
   "dependencies": {
     "lucide": "^1.17.0",
@@ -17,6 +17,7 @@
     "vite-plugin-wasm": "^3.6.0"
   },
   "devDependencies": {
+    "@types/node": "^24.13.3",
     "oxfmt": "^0.54.0",
     "oxlint": "^1.69.0",
     "oxlint-tsgolint": "^7.0.2001",

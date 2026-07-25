@@ -1,10 +1,8 @@
-import { defineConfig } from "oxfmt";
+import { platform } from "node:process";
 
-// FIXME Avoid installing @types/node
-// import { platform } from "node:process";
-declare const process: { platform: string };
+import { defineConfig } from "oxfmt";
 
 export default defineConfig({
   sortImports: true,
-  endOfLine: process.platform === "win32" ? "crlf" : "lf", // https://github.com/oxc-project/oxc/issues/17856
+  endOfLine: platform === "win32" ? "crlf" : "lf", // https://github.com/oxc-project/oxc/issues/17856
 });

@@ -1,4 +1,6 @@
 {
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
@@ -10,13 +12,9 @@
     "noUnusedParameters": true,
 
     "moduleResolution": "bundler",
-    "types": ["vite/client"],
 
     "noEmit": true,
 
-    "lib": ["ESNext", "DOM"],
-    "target": "esnext",
-
-    "skipLibCheck": true // https://github.com/vitejs/vite/issues/7598
+    "target": "esnext"
   }
 }

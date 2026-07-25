@@ -55,9 +55,14 @@ A minimalist `#header` (title and attribution links) sits at the top of the `bod
 
 All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts to pixel-space.
 
-### TypeScript strictness
+### TypeScript
 
-`app/tsconfig.json` enables a large set of strict checks. Ensure correctness by type-checking after edits.
+`app` splits its TypeScript into two programs via project references, because the two environments need conflicting global types.
+
+- `tsconfig.app.json` — the browser code in `src` (DOM lib, `vite/client` types).
+- `tsconfig.node.json` — the Node config files (`*.config.ts`, `@types/node`).
+
+`npm run check` runs `tsc --build`, which type-checks both. Ensure correctness by type-checking after edits.
 
 ### Vite base path
 

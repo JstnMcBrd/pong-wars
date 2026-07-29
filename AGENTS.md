@@ -4,6 +4,8 @@ This file provides guidance to AI coding agents working with code in this reposi
 
 Keep `AGENTS.md` and `README.md` up-to-date whenever you modify the project.
 
+`AGENTS.md` is a high-level overview, not a reference manual — you can always read the code for details. Keep updates brief and conceptual, and resist the urge to document every file or restate implementation details.
+
 ## Commands
 
 The repo is an npm workspace with two packages: `app` (the Vite UI) and `sim` (the Rust/Wasm physics engine). Root scripts fan out across both; target one with `--workspace=...`.

@@ -93,9 +93,7 @@ class Canvas {
     const numTeams = ballPosX.length;
     const twoPi = Math.PI * 2;
 
-    this.ctx.lineWidth = 2;
     this.ctx.fillStyle = "#ffffff";
-    this.ctx.strokeStyle = "#ffffff";
 
     for (let i = 0; i < numTeams; i++) {
       const bx = ballPosX[i],
@@ -107,7 +105,6 @@ class Canvas {
       this.ctx.beginPath();
       this.ctx.arc(bx * this.cellW, by * this.cellH, this.ballRadiusPx, 0, twoPi);
       this.ctx.fill();
-      this.ctx.stroke();
     }
   }
 }

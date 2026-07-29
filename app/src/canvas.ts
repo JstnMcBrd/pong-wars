@@ -26,7 +26,9 @@ class Canvas {
 
   constructor() {
     this.el = document.getElementById("canvas") as HTMLCanvasElement;
-    this.ctx = this.el.getContext("2d")!;
+    // Opaque: the sim always writes alpha 255 and drawFrame covers the full
+    // canvas, so there is nothing for the compositor to blend against the page.
+    this.ctx = this.el.getContext("2d", { alpha: false })!;
 
     // Placeholder — replaced by the first draw() when the grid size is known.
     this.offscreen = new OffscreenCanvas(1, 1);

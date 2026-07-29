@@ -1,4 +1,4 @@
-const MIN_BALL_RADIUS_PX = 1;
+const MIN_BALL_RADIUS_PX = 2;
 
 /**
  * DOM wrapper for the <canvas> element. Handles all drawing and keeps the
@@ -26,7 +26,9 @@ class Canvas {
 
   constructor() {
     this.el = document.getElementById("canvas") as HTMLCanvasElement;
-    this.ctx = this.el.getContext("2d")!;
+    // Opaque: the sim always writes alpha 255 and drawFrame covers the full
+    // canvas, so there is nothing for the compositor to blend against the page.
+    this.ctx = this.el.getContext("2d", { alpha: false })!;
 
     // Placeholder — replaced by the first draw() when the grid size is known.
     this.offscreen = new OffscreenCanvas(1, 1);
@@ -93,9 +95,7 @@ class Canvas {
     const numTeams = ballPosX.length;
     const twoPi = Math.PI * 2;
 
-    this.ctx.lineWidth = 2;
     this.ctx.fillStyle = "#ffffff";
-    this.ctx.strokeStyle = "#ffffff";
 
     for (let i = 0; i < numTeams; i++) {
       const bx = ballPosX[i],
@@ -107,7 +107,6 @@ class Canvas {
       this.ctx.beginPath();
       this.ctx.arc(bx * this.cellW, by * this.cellH, this.ballRadiusPx, 0, twoPi);
       this.ctx.fill();
-      this.ctx.stroke();
     }
   }
 }

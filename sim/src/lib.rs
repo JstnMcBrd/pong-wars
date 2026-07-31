@@ -165,29 +165,34 @@ impl Simulation {
         let height = self.num_rows as f32;
         let team_color = self.team_colors[team];
 
+        let mut pos_x = self.ball_pos_x[team];
+        let mut pos_y = self.ball_pos_y[team];
+        let mut dir_x = self.ball_dir_x[team];
+        let mut dir_y = self.ball_dir_y[team];
+
         // 1. Move
 
-        self.ball_pos_x[team] += self.ball_dir_x[team] * TICK_DISTANCE;
-        self.ball_pos_y[team] += self.ball_dir_y[team] * TICK_DISTANCE;
+        pos_x += dir_x * TICK_DISTANCE;
+        pos_y += dir_y * TICK_DISTANCE;
 
         // 2. Wall bounce — clamp position to prevent corner-sticking.
         // TODO Maybe instead of clamping, consider reflecting off the wall and moving the remaining distance?
 
-        if self.ball_pos_x[team] < BALL_RADIUS {
-            self.ball_pos_x[team] = BALL_RADIUS;
-            self.ball_dir_x[team] = 1.0;
+        if pos_x < BALL_RADIUS {
+            pos_x = BALL_RADIUS;
+            dir_x = 1.0;
         }
-        if self.ball_pos_x[team] > width - BALL_RADIUS {
-            self.ball_pos_x[team] = width - BALL_RADIUS;
-            self.ball_dir_x[team] = -1.0;
+        if pos_x > width - BALL_RADIUS {
+            pos_x = width - BALL_RADIUS;
+            dir_x = -1.0;
         }
-        if self.ball_pos_y[team] < BALL_RADIUS {
-            self.ball_pos_y[team] = BALL_RADIUS;
-            self.ball_dir_y[team] = 1.0;
+        if pos_y < BALL_RADIUS {
+            pos_y = BALL_RADIUS;
+            dir_y = 1.0;
         }
-        if self.ball_pos_y[team] > height - BALL_RADIUS {
-            self.ball_pos_y[team] = height - BALL_RADIUS;
-            self.ball_dir_y[team] = -1.0;
+        if pos_y > height - BALL_RADIUS {
+            pos_y = height - BALL_RADIUS;
+            dir_y = -1.0;
         }
 
         // 3. Cell collision
@@ -196,10 +201,10 @@ impl Simulation {
         // Because grid-space position == cell index, floor() gives the cell directly.
         // TODO Consider using ball radius to calculate a circular bounding area
         // FIXME Does this create a square collider area?
-        let col_min = (self.ball_pos_x[team] - BALL_RADIUS).max(0.0) as usize;
-        let col_max = (self.ball_pos_x[team] + BALL_RADIUS).min(width - 1.0) as usize;
-        let row_min = (self.ball_pos_y[team] - BALL_RADIUS).max(0.0) as usize;
-        let row_max = (self.ball_pos_y[team] + BALL_RADIUS).min(height - 1.0) as usize;
+        let col_min = (pos_x - BALL_RADIUS).max(0.0) as usize;
+        let col_max = (pos_x + BALL_RADIUS).min(width - 1.0) as usize;
+        let row_min = (pos_y - BALL_RADIUS).max(0.0) as usize;
+        let row_max = (pos_y + BALL_RADIUS).min(height - 1.0) as usize;
 
         let mut reflect_x = false;
         let mut reflect_y = false;
@@ -213,12 +218,12 @@ impl Simulation {
                     // Determine reflection axis from the cell center → ball vector.
                     let cell_cx = col as f32 + 0.5;
                     let cell_cy = row as f32 + 0.5;
-                    let dx = (cell_cx - self.ball_pos_x[team]).abs();
-                    let dy = (cell_cy - self.ball_pos_y[team]).abs();
-                    if dx >= dy {
+                    let dist_x = (cell_cx - pos_x).abs();
+                    let dist_y = (cell_cy - pos_y).abs();
+                    if dist_x >= dist_y {
                         reflect_x = true;
                     }
-                    if dx <= dy {
+                    if dist_x <= dist_y {
                         reflect_y = true;
                     }
                 }
@@ -226,12 +231,17 @@ impl Simulation {
         }
 
         if reflect_x {
-            self.ball_dir_x[team] *= -1.0;
+            dir_x *= -1.0;
         }
         if reflect_y {
-            self.ball_dir_y[team] *= -1.0;
+            dir_y *= -1.0;
         }
         // TODO Consider calculating reflection point and reflecting off the wall and moving the remaining distance,
         // instead of just ignoring the overlap
+
+        self.ball_pos_x[team] = pos_x;
+        self.ball_pos_y[team] = pos_y;
+        self.ball_dir_x[team] = dir_x;
+        self.ball_dir_y[team] = dir_y;
     }
 }

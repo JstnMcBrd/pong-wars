@@ -20,4 +20,4 @@ More balls, more squares, more speed!
   - Runs in a Web Worker so physics never blocks the main thread
   - Supports any number of ticks per frame for turbo-speed simulation
 
-The separation between rendering and physics enables blindly fast simulation speeds!
+The separation between rendering and physics allows them to run concurrently, enabling blindly fast simulation speeds!

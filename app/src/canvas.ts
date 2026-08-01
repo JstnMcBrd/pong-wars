@@ -1,3 +1,5 @@
+import type { Frame } from "./protocol.js";
+
 const MIN_BALL_RADIUS_PX = 2;
 
 /**
@@ -20,9 +22,7 @@ class Canvas {
   private ballRadiusPx = 0;
 
   // Cached last frame so redraw() can repaint after a resize.
-  private lastPixels: ImageDataArray | null = null;
-  private lastBallPosX: Float32Array | null = null;
-  private lastBallPosY: Float32Array | null = null;
+  private lastFrame: Frame | null = null;
 
   constructor() {
     this.el = document.getElementById("canvas") as HTMLCanvasElement;
@@ -36,7 +36,9 @@ class Canvas {
 
     // Keep buffer resolution in sync with CSS-rendered size.
     new ResizeObserver(([entry]) => {
-      if (!entry) return;
+      if (!entry) {
+        return;
+      }
       const { width, height } = entry.contentRect;
       this.el.width = Math.floor(width);
       this.el.height = Math.floor(height);
@@ -52,39 +54,32 @@ class Canvas {
   }
 
   /** Render a frame. The offscreen buffer is reconfigured lazily when the grid size changes. */
-  public draw(
-    pixels: ImageDataArray,
-    cols: number,
-    rows: number,
-    ballPosX: Float32Array,
-    ballPosY: Float32Array,
-  ): void {
-    // Reconfigure the offscreen buffer lazily when the grid size changes.
-    if (rows !== this.offscreen.height || cols !== this.offscreen.width) {
-      this.offscreen = new OffscreenCanvas(cols, rows);
+  public draw(frame: Frame): void {
+    if (frame.cols !== this.offscreen.width || frame.rows !== this.offscreen.height) {
+      this.offscreen = new OffscreenCanvas(frame.cols, frame.rows);
       this.offCtx = this.offscreen.getContext("2d")!;
       this.recomputeCellSize();
     }
 
-    // Cache the last frame for redraws after resizes.
-    this.lastPixels = pixels;
-    this.lastBallPosX = ballPosX;
-    this.lastBallPosY = ballPosY;
+    // Cache the frame for redraws after resizes.
+    this.lastFrame = frame;
 
-    this.drawFrame(pixels, ballPosX, ballPosY);
+    this.drawFrame(frame);
   }
 
   /** Repaint the last frame at the current canvas size. No-op before the first draw(). */
   private redraw(): void {
-    if (this.lastPixels === null || this.lastBallPosX === null || this.lastBallPosY === null) {
+    if (this.lastFrame === null) {
       return;
     }
-    this.drawFrame(this.lastPixels, this.lastBallPosX, this.lastBallPosY);
+    this.drawFrame(this.lastFrame);
   }
 
-  private drawFrame(pixels: ImageDataArray, ballPosX: Float32Array, ballPosY: Float32Array): void {
+  private drawFrame(frame: Frame): void {
+    const { pixels, cols, rows, ballPosX, ballPosY } = frame;
+
     // 1. Blit the pre-painted RGBA pixels into the 1px-per-cell offscreen buffer.
-    const image = new ImageData(pixels, this.offscreen.width, this.offscreen.height);
+    const image = new ImageData(pixels as ImageDataArray, cols, rows);
     this.offCtx.putImageData(image, 0, 0);
 
     // 2. Scale the offscreen canvas up to the main canvas in one GPU blit.

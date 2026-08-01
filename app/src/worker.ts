@@ -16,7 +16,8 @@ import type { WorkerMessage, WorkerReply } from "./protocol.js";
 
 let cols = 0;
 let rows = 0;
-let sim = new Simulation(cols, rows, 0); // dummy initial sim; will be reset on 'ready'
+let epoch = 0; // Reset identifier - allows `main.ts` to drop frames left over from a replaced simulation
+let sim = new Simulation(cols, rows, 0); // Dummy initial sim; will be reset on 'ready'
 
 onmessage = function (e: MessageEvent<WorkerMessage>) {
   const msg = e.data;
@@ -26,24 +27,37 @@ onmessage = function (e: MessageEvent<WorkerMessage>) {
 
     cols = msg.numCols;
     rows = msg.numRows;
+    epoch = msg.epoch;
     sim = new Simulation(cols, rows, msg.numTeams);
 
-    const pixels = sim.get_pixels();
-    const ballPosX = sim.get_ball_pos_x();
-    const ballPosY = sim.get_ball_pos_y();
-    const frame: WorkerReply = { type: "frame", pixels, cols, rows, ballPosX, ballPosY };
-    postMessage(frame, [pixels.buffer, ballPosX.buffer, ballPosY.buffer]);
+    postFrame();
   }
 
   if (msg.type === "tick") {
     sim.tick_n(msg.ticks);
-    const pixels = sim.get_pixels();
-    const ballPosX = sim.get_ball_pos_x();
-    const ballPosY = sim.get_ball_pos_y();
-    const frame: WorkerReply = { type: "frame", pixels, cols, rows, ballPosX, ballPosY };
-    postMessage(frame, [pixels.buffer, ballPosX.buffer, ballPosY.buffer]);
+    postFrame();
   }
 };
+
+/** Snapshot the simulation and hand the buffers to the main thread. */
+function postFrame(): void {
+  const pixels = sim.get_pixels();
+  const ballPosX = sim.get_ball_pos_x();
+  const ballPosY = sim.get_ball_pos_y();
+
+  const frame: WorkerReply = {
+    type: "frame",
+    epoch,
+    frame: {
+      pixels,
+      cols,
+      rows,
+      ballPosX,
+      ballPosY,
+    },
+  };
+  postMessage(frame, [pixels.buffer, ballPosX.buffer, ballPosY.buffer]);
+}
 
 onerror = function (e) {
   console.error("Worker error:", e);

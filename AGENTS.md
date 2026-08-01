@@ -45,6 +45,7 @@ canvas.ts  draws frame
 
 - `app/src/main.ts` — orchestration layer. Wires the singletons together and drives the per-frame loop, sending one `tick` to the worker per frame with back-pressure to avoid overrunning it.
 - `app/src/worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
+- `app/src/protocol.ts` — the message types shared by both sides of the worker boundary.
 - `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
 - `app/src/canvas.ts` — `Canvas` singleton. Renders each frame by drawing a 1px-per-cell `OffscreenCanvas` scaled up to the display size, kept in sync with the CSS-rendered size by a `ResizeObserver`.
 - `sim/src/lib.rs` — the physics engine. `Simulation` stores the grid as a flat RGBA pixel `Vec` (plus positions and directions as flat `Vec`s) in grid-space, and owns the team color palette. Each tick: move → wall-bounce → cell-collision.
@@ -59,12 +60,13 @@ All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts t
 
 ### TypeScript
 
-`app` splits its TypeScript into two programs via project references, because the two environments need conflicting global types.
+`app` splits its TypeScript into three programs via project references, because the environments need conflicting global types.
 
-- `tsconfig.app.json` — the browser code in `src` (DOM lib, `vite/client` types).
+- `tsconfig.app.json` — the browser code in `src` (DOM lib, `vite/client` types). Excludes `worker.ts`.
+- `tsconfig.worker.json` — `worker.ts` alone (WebWorker lib, no `@types`).
 - `tsconfig.node.json` — the Node config files (`*.config.ts`, `@types/node`).
 
-`npm run check` runs `tsc --build`, which type-checks both. Ensure correctness by type-checking after edits.
+`npm run check` runs `tsc --build`, which type-checks all programs. Ensure correctness by type-checking after edits.
 
 ### Vite base path
 

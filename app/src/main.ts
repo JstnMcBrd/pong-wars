@@ -2,8 +2,8 @@ import "./styles.css";
 import { createIcons, Pause, Play, Square } from "lucide";
 
 import { canvas } from "./canvas.js";
+import type { WorkerMessage, WorkerReply } from "./protocol.js";
 import { sidebar } from "./sidebar.js";
-import type { WorkerMessage, WorkerReply } from "./worker.js";
 
 createIcons({ icons: { Pause, Play, Square } });
 

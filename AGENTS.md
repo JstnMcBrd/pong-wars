@@ -39,15 +39,15 @@ main.ts  ────[reset / tick]───────────────
                                                   │    get_pixels()     → Uint8ClampedArray (RGBA)
                                                   │    get_ball_pos_x() → Float32Array
                                                   │    get_ball_pos_y() → Float32Array
- ◄─[frame: pixels, cols, rows, ballPosX, ballPosY]┘  (transferred zero-copy)
+ ◄──────────────[frame: epoch + Frame]────────────┘  (transferred zero-copy)
 canvas.ts  draws frame
 ```
 
-- `app/src/main.ts` — orchestration layer. Wires the singletons together and drives the per-frame loop, sending one `tick` to the worker per frame with back-pressure to avoid overrunning it.
+- `app/src/main.ts` — orchestration layer. Wires the singletons together and drives the per-frame loop. Each animation frame asks for the next frame *before* drawing the one that arrived, so the worker computes while the main thread draws.
 - `app/src/worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
 - `app/src/protocol.ts` — the message types shared by both sides of the worker boundary.
 - `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
-- `app/src/canvas.ts` — `Canvas` singleton. Renders each frame by drawing a 1px-per-cell `OffscreenCanvas` scaled up to the display size, kept in sync with the CSS-rendered size by a `ResizeObserver`.
+- `app/src/canvas.ts` — `Canvas` singleton. Draws a `Frame` by blitting a 1px-per-cell `OffscreenCanvas` scaled up to the display size, kept in sync with the CSS-rendered size by a `ResizeObserver`.
 - `sim/src/lib.rs` — the physics engine. `Simulation` stores the grid as a flat RGBA pixel `Vec` (plus positions and directions as flat `Vec`s) in grid-space, and owns the team color palette. Each tick: move → wall-bounce → cell-collision.
 
 ### Layout and canvas sizing

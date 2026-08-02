@@ -43,7 +43,7 @@ main.ts  ────[reset / tick]───────────────
 canvas.ts  draws frame
 ```
 
-- `app/src/main.ts` — orchestration layer. Wires the singletons together and drives the per-frame loop. Each animation frame asks for the next frame *before* drawing the one that arrived, so the worker computes while the main thread draws.
+- `app/src/main.ts` — orchestration layer. Wires the singletons together and drives the per-frame loop. Each animation frame asks for the next frame *before* drawing the one that arrived, so the worker computes while the main thread draws. When settings are modified, the loop posts at most one reset per frame.
 - `app/src/worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
 - `app/src/protocol.ts` — the message types shared by both sides of the worker boundary.
 - `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.

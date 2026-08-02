@@ -12,6 +12,9 @@ createIcons({ icons: { Pause, Play, Square } });
 /** Identifies the simulation a frame belongs to. Frames from a superseded one are dropped. */
 let epoch = 0;
 
+/** A reset that has been requested but not posted yet. Flushed once per animation frame. */
+let resetPending = false;
+
 /** A request the worker has not answered yet. Starts true: the worker is still booting. */
 let workerBusy = true;
 
@@ -33,20 +36,12 @@ worker.onerror = function (e) {
   console.error("Worker error:", e);
 };
 
-/** Reinitialize the simulation, draining whatever the previous one had in flight. */
+/** Mark the simulation as needing reinitialization. */
 function resetSimulation(): void {
   epoch++;
+  resetPending = true;
   workerBusy = true;
   pendingFrame = null;
-
-  const msg: WorkerMessage = {
-    type: "reset",
-    epoch,
-    numCols: sidebar.gridSize,
-    numRows: sidebar.gridSize,
-    numTeams: sidebar.numTeams,
-  };
-  worker.postMessage(msg);
 }
 
 // ── Orchestration ──────────────────────────────────────────────────────────
@@ -57,6 +52,20 @@ sidebar.onReset(resetSimulation);
 
 function loop(): void {
   requestAnimationFrame(loop);
+
+  // Flush before anything else, and return
+  if (resetPending) {
+    resetPending = false;
+    const msg: WorkerMessage = {
+      type: "reset",
+      epoch,
+      numCols: sidebar.gridSize,
+      numRows: sidebar.gridSize,
+      numTeams: sidebar.numTeams,
+    };
+    worker.postMessage(msg);
+    return;
+  }
 
   const frame = pendingFrame;
   pendingFrame = null;

@@ -47,7 +47,7 @@ canvas.ts  draws frame
 - `app/src/worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
 - `app/src/protocol.ts` — the message types shared by both sides of the worker boundary.
 - `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
-- `app/src/canvas.ts` — `Canvas` singleton. Draws a `Frame` by writing the grid to a pixel-sized canvas and overlaying transparent ball strokes on a second canvas, keeping both layers in sync with the CSS-rendered size via a `ResizeObserver`.
+- `app/src/canvas.ts` — `Canvas` singleton. Draws a `Frame` by writing the grid to a pixel-sized canvas and overlaying transparent ball strokes on a second canvas, keeping the ball layer in sync with the CSS-rendered size via a `ResizeObserver`.
 - `sim/src/lib.rs` — the physics engine. `Simulation` stores the grid as a flat RGBA pixel `Vec` (plus positions and directions as flat `Vec`s) in grid-space, and owns the team color palette. Each tick: move → wall-bounce → cell-collision.
 
 ### Layout and canvas sizing

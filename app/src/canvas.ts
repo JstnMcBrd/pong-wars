@@ -12,8 +12,8 @@ class Canvas {
   private readonly gridCanvas: HTMLCanvasElement;
   private readonly ballsCanvas: HTMLCanvasElement;
 
-  private gridCtx: CanvasRenderingContext2D;
-  private ballsCtx: CanvasRenderingContext2D;
+  private readonly gridCtx: CanvasRenderingContext2D;
+  private readonly ballsCtx: CanvasRenderingContext2D;
 
   private cellW = 0;
   private cellH = 0;
@@ -34,11 +34,15 @@ class Canvas {
       if (!entry) {
         return;
       }
+
       const { width, height } = entry.contentRect;
       this.ballsCanvas.width = Math.floor(width);
       this.ballsCanvas.height = Math.floor(height);
       this.recomputeCellSize();
-      this.redrawBalls();
+
+      if (this.lastBallPosX !== null && this.lastBallPosY !== null) {
+        this.drawBalls(this.lastBallPosX, this.lastBallPosY);
+      }
     }).observe(this.container);
   }
 
@@ -56,11 +60,11 @@ class Canvas {
       this.recomputeCellSize();
     }
 
-    this.lastBallPosX = frame.ballPosX;
-    this.lastBallPosY = frame.ballPosY;
-
     this.drawGrid(frame);
     this.drawBalls(frame.ballPosX, frame.ballPosY);
+
+    this.lastBallPosX = frame.ballPosX;
+    this.lastBallPosY = frame.ballPosY;
   }
 
   private drawGrid(frame: Frame): void {
@@ -88,14 +92,6 @@ class Canvas {
       this.ballsCtx.arc(bx * this.cellW, by * this.cellH, this.ballRadiusPx, 0, twoPi);
       this.ballsCtx.fill();
     }
-  }
-
-  /** Repaint the last ball positions at the current display size. No-op before the first draw(). */
-  private redrawBalls(): void {
-    if (this.lastBallPosX === null || this.lastBallPosY === null) {
-      return;
-    }
-    this.drawBalls(this.lastBallPosX, this.lastBallPosY);
   }
 }
 

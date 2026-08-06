@@ -124,7 +124,6 @@ body {
 
 #canvas {
   position: relative;
-  display: block;
   width: var(--canvas-size);
   height: var(--canvas-size);
 }
@@ -140,10 +139,6 @@ body {
 
 #grid {
   image-rendering: pixelated;
-}
-
-#balls {
-  background: transparent;
 }
 
 /* Side-by-side layout: canvas left, panel right, stretched to canvas height.

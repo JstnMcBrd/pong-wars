@@ -219,16 +219,16 @@ impl Simulation {
             // Because grid-space position == cell index, floor() gives the cell directly.
             // TODO Consider using ball radius to calculate a circular bounding area
             // FIXME Does this create a square collider area?
-            let col_min = (pos_x - BALL_RADIUS).max(0.0) as usize;
+            let col_min = (pos_x - BALL_RADIUS) as usize;
             let col_max = (pos_x + BALL_RADIUS).min(width - 1.0) as usize;
-            let row_min = (pos_y - BALL_RADIUS).max(0.0) as usize;
+            let row_min = (pos_y - BALL_RADIUS) as usize;
             let row_max = (pos_y + BALL_RADIUS).min(height - 1.0) as usize;
 
             let mut reflect_x = false;
             let mut reflect_y = false;
 
-            for row in row_min..=row_max {
-                for col in col_min..=col_max {
+            for row in row_min..row_max + 1 {
+                for col in col_min..col_max + 1 {
                     let idx = (col + row * self.num_cols) * 4;
                     if self.pixels[idx..idx + 4] != team_color {
                         self.pixels[idx..idx + 4].copy_from_slice(&team_color);

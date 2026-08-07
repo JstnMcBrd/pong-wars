@@ -157,67 +157,52 @@ impl Simulation {
 
     /// Advance every ball by one tick, one phase at a time.
     ///
-    /// Move and wall-bounce depend only on a ball's own state, so running them
-    /// for all balls first is equivalent to interleaving them per ball. It also
-    /// gives the auto-vectorizer two uniform loops over contiguous slices.
-    /// Cell collision reads the grid as mutated by every earlier ball, so it
-    /// stays serial and in team order.
+    /// Motion depends only on a ball's own state, so running it for all balls
+    /// first is equivalent to interleaving it per ball, and it gives the
+    /// auto-vectorizer a uniform loop over contiguous slices. Cell collision
+    /// reads the grid as mutated by every earlier ball, so it stays serial and
+    /// in team order.
+    ///
+    /// The two axes are independent, so one function handles both.
     fn tick(&mut self) {
-        self.update_positions();
-        self.update_wall_bounces();
+        Self::update_motion(
+            &mut self.ball_pos_x,
+            &mut self.ball_vel_x,
+            self.num_cols as f32,
+        );
+        Self::update_motion(
+            &mut self.ball_pos_y,
+            &mut self.ball_vel_y,
+            self.num_rows as f32,
+        );
         self.update_cell_collisions();
     }
 
-    /// Phase 1 — move each ball by its velocity.
-    fn update_positions(&mut self) {
-        for (pos, vel) in self.ball_pos_x.iter_mut().zip(self.ball_vel_x.iter()) {
-            *pos += *vel;
-        }
-        for (pos, vel) in self.ball_pos_y.iter_mut().zip(self.ball_vel_y.iter()) {
-            *pos += *vel;
-        }
-    }
-
-    /// Phase 2 — bounce each ball off the grid edges.
+    /// Phase 1 — move every ball along one axis and bounce it off the two edges.
     ///
-    /// Written as compare-and-select rather than mutating `if` blocks, because
-    /// selects vectorize and branches do not. `clamp` would be shorter but its
-    /// NaN semantics differ from the Wasm `f32.min` / `f32.max` instructions,
-    /// which costs fix-up code.
-    fn update_wall_bounces(&mut self) {
+    /// The bounce is a compare-and-select rather than a mutating `if` block,
+    /// because selects vectorize and branches do not. `clamp` would be shorter
+    /// but its NaN semantics differ from the Wasm `f32.min` / `f32.max`
+    /// instructions, which costs fix-up code.
+    ///
+    /// Takes slices rather than `&mut self` so the move and the bounce can share
+    /// one pass over the data. Splitting them would load and store both arrays
+    /// twice, and these loops are bound by memory traffic, not by arithmetic.
+    fn update_motion(positions: &mut [f32], velocities: &mut [f32], size: f32) {
         // Clamp position to prevent corner-sticking.
         // TODO Maybe instead of clamping, consider reflecting off the wall and moving the remaining distance?
 
-        let max_x = self.num_cols as f32 - BALL_RADIUS;
-        for (pos, vel) in self.ball_pos_x.iter_mut().zip(self.ball_vel_x.iter_mut()) {
-            let below = *pos < BALL_RADIUS;
-            let above = *pos > max_x;
+        let max = size - BALL_RADIUS;
+        for (pos, vel) in positions.iter_mut().zip(velocities.iter_mut()) {
+            let moved = *pos + *vel;
+            let below = moved < BALL_RADIUS;
+            let above = moved > max;
             *pos = if below {
                 BALL_RADIUS
             } else if above {
-                max_x
+                max
             } else {
-                *pos
-            };
-            *vel = if below {
-                TICK_DISTANCE
-            } else if above {
-                -TICK_DISTANCE
-            } else {
-                *vel
-            };
-        }
-
-        let max_y = self.num_rows as f32 - BALL_RADIUS;
-        for (pos, vel) in self.ball_pos_y.iter_mut().zip(self.ball_vel_y.iter_mut()) {
-            let below = *pos < BALL_RADIUS;
-            let above = *pos > max_y;
-            *pos = if below {
-                BALL_RADIUS
-            } else if above {
-                max_y
-            } else {
-                *pos
+                moved
             };
             *vel = if below {
                 TICK_DISTANCE
@@ -229,7 +214,7 @@ impl Simulation {
         }
     }
 
-    /// Phase 3 — paint the cells each ball overlaps and reflect off the ones it captures.
+    /// Phase 2 — paint the cells each ball overlaps and reflect off the ones it captures.
     ///
     /// Serial by nature: the visited cell count is data-dependent, the write is
     /// conditional, and each ball must see the grid left by the balls before it.

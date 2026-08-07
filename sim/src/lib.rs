@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::*;
 const BALL_RADIUS: f32 = 0.5;
 
 /// Fraction of a cell that the ball moves per tick, along each axis.
-/// Stored directly in the velocity arrays, so a move is a plain add.
+/// Seeds the velocity arrays, so a move is a plain add and a bounce is a negation.
 /// Must be <= 2 * BALL_RADIUS to guarantee no cell skipping.
 const TICK_DISTANCE: f32 = 0.5;
 
@@ -156,61 +156,49 @@ impl Simulation {
     }
 
     /// Advance every ball by one tick, one phase at a time.
-    ///
-    /// Motion depends only on a ball's own state, so running it for all balls
-    /// first is equivalent to interleaving it per ball, and it gives the
-    /// auto-vectorizer a uniform loop over contiguous slices. Cell collision
-    /// reads the grid as mutated by every earlier ball, so it stays serial and
-    /// in team order.
-    ///
-    /// The two axes are independent, so one function handles both.
     fn tick(&mut self) {
-        Self::update_motion(
-            &mut self.ball_pos_x,
-            &mut self.ball_vel_x,
-            self.num_cols as f32,
-        );
-        Self::update_motion(
-            &mut self.ball_pos_y,
-            &mut self.ball_vel_y,
-            self.num_rows as f32,
-        );
+        self.update_motion();
         self.update_cell_collisions();
     }
 
-    /// Phase 1 — move every ball along one axis and bounce it off the two edges.
+    /// Phase 1 — move every ball and bounce it off the grid edges.
     ///
     /// The bounce is a compare-and-select rather than a mutating `if` block,
     /// because selects vectorize and branches do not. `clamp` would be shorter
     /// but its NaN semantics differ from the Wasm `f32.min` / `f32.max`
     /// instructions, which costs fix-up code.
-    ///
-    /// Takes slices rather than `&mut self` so the move and the bounce can share
-    /// one pass over the data. Splitting them would load and store both arrays
-    /// twice, and these loops are bound by memory traffic, not by arithmetic.
-    fn update_motion(positions: &mut [f32], velocities: &mut [f32], size: f32) {
+    fn update_motion(&mut self) {
         // Clamp position to prevent corner-sticking.
         // TODO Maybe instead of clamping, consider reflecting off the wall and moving the remaining distance?
 
-        let max = size - BALL_RADIUS;
-        for (pos, vel) in positions.iter_mut().zip(velocities.iter_mut()) {
+        let max_x = self.num_cols as f32 - BALL_RADIUS;
+        for (pos, vel) in self.ball_pos_x.iter_mut().zip(self.ball_vel_x.iter_mut()) {
             let moved = *pos + *vel;
             let below = moved < BALL_RADIUS;
-            let above = moved > max;
+            let above = moved > max_x;
             *pos = if below {
                 BALL_RADIUS
             } else if above {
-                max
+                max_x
             } else {
                 moved
             };
-            *vel = if below {
-                TICK_DISTANCE
+            *vel = if below || above { -*vel } else { *vel };
+        }
+
+        let max_y = self.num_rows as f32 - BALL_RADIUS;
+        for (pos, vel) in self.ball_pos_y.iter_mut().zip(self.ball_vel_y.iter_mut()) {
+            let moved = *pos + *vel;
+            let below = moved < BALL_RADIUS;
+            let above = moved > max_y;
+            *pos = if below {
+                BALL_RADIUS
             } else if above {
-                -TICK_DISTANCE
+                max_y
             } else {
-                *vel
+                moved
             };
+            *vel = if below || above { -*vel } else { *vel };
         }
     }
 

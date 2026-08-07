@@ -20,7 +20,7 @@ npm run lint        # Lint
 npm run check       # Type-check (note: sim bindings must be built first to pass app type-check)
 ```
 
-There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any build that touches the Wasm crate (`wasm-pack` installs it automatically).
+There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any script that touches the Wasm crate, including `lint` and `check`. `wasm-pack` installs the target automatically, and CI adds it explicitly.
 
 The app imports the physics engine as a normal workspace package (`import … from "sim"`). The `sim` package's `package.json` points at its generated `pkg/` output.
 

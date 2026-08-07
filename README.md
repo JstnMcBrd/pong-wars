@@ -14,7 +14,7 @@ More balls, more squares, more speed!
 
 - **App**
   - Uses TypeScript + Vite, transpiles to pure HTML/CSS/JS for the browser
-  - Paints the grid to the canvas every frame
+  - Renders the grid and balls every frame
 - **Sim**
   - Written in Rust, compiles to Wasm
   - Runs in a Web Worker so physics never blocks the main thread

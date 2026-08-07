@@ -40,6 +40,13 @@ pub struct Simulation {
 
     /// Layout: `[vy_0, vy_1, …, vy_n]` where `n=num_teams-1` and each value is ±`TICK_DISTANCE`.
     ball_vel_y: Vec<f32>,
+
+    /// Each ball's collision bounding box, in cell coordinates.
+    /// Recomputed every tick by `update_bounds`, consumed by `update_cell_collisions`.
+    ball_col_min: Vec<usize>,
+    ball_col_max: Vec<usize>,
+    ball_row_min: Vec<usize>,
+    ball_row_max: Vec<usize>,
 }
 
 #[wasm_bindgen]
@@ -62,6 +69,11 @@ impl Simulation {
         let ball_vel_x = vec![0.0; num_teams];
         let ball_vel_y = vec![0.0; num_teams];
 
+        let ball_col_min = vec![0; num_teams];
+        let ball_col_max = vec![0; num_teams];
+        let ball_row_min = vec![0; num_teams];
+        let ball_row_max = vec![0; num_teams];
+
         let mut sim = Simulation {
             num_cols,
             num_rows,
@@ -73,6 +85,11 @@ impl Simulation {
             ball_pos_y,
             ball_vel_x,
             ball_vel_y,
+
+            ball_col_min,
+            ball_col_max,
+            ball_row_min,
+            ball_row_max,
         };
         sim.init();
         sim
@@ -158,6 +175,7 @@ impl Simulation {
     /// Advance every ball by one tick, one phase at a time.
     fn tick(&mut self) {
         self.update_motion();
+        self.update_bounds();
         self.update_cell_collisions();
     }
 
@@ -202,27 +220,50 @@ impl Simulation {
         }
     }
 
-    /// Phase 2 — paint the cells each ball overlaps and reflect off the ones it captures.
+    /// Phase 2 — compute every ball's collision bounding box in cell coordinates.
     ///
-    /// Serial by nature: the visited cell count is data-dependent, the write is
-    /// conditional, and each ball must see the grid left by the balls before it.
-    fn update_cell_collisions(&mut self) {
-        let width = self.num_cols as f32;
-        let height = self.num_rows as f32;
+    /// Vectorizes four balls at a time because it is element-wise over the position arrays.
+    fn update_bounds(&mut self) {
+        // TODO Consider using ball radius to calculate a circular bounding area
+        // FIXME Does this create a square collider area?
 
+        let max_col = self.num_cols as f32 - 1.0;
+        for ((pos, min), max) in self
+            .ball_pos_x
+            .iter()
+            .zip(self.ball_col_min.iter_mut())
+            .zip(self.ball_col_max.iter_mut())
+        {
+            *min = (*pos - BALL_RADIUS) as usize;
+            *max = (*pos + BALL_RADIUS).min(max_col) as usize;
+        }
+
+        let max_row = self.num_rows as f32 - 1.0;
+        for ((pos, min), max) in self
+            .ball_pos_y
+            .iter()
+            .zip(self.ball_row_min.iter_mut())
+            .zip(self.ball_row_max.iter_mut())
+        {
+            *min = (*pos - BALL_RADIUS) as usize;
+            *max = (*pos + BALL_RADIUS).min(max_row) as usize;
+        }
+    }
+
+    /// Phase 3 — paint the cells each ball overlaps and reflect off the ones it captures.
+    ///
+    /// The collision pass itself cannot be vectorized.
+    /// The grid access needs a gather, which Wasm SIMD does not have.
+    fn update_cell_collisions(&mut self) {
         for team in 0..self.num_teams {
             let team_color = self.team_colors[team];
             let pos_x = self.ball_pos_x[team];
             let pos_y = self.ball_pos_y[team];
 
-            // Bounding box of the ball's circle in cell coordinates.
-            // Because grid-space position == cell index, floor() gives the cell directly.
-            // TODO Consider using ball radius to calculate a circular bounding area
-            // FIXME Does this create a square collider area?
-            let col_min = (pos_x - BALL_RADIUS) as usize;
-            let col_max = (pos_x + BALL_RADIUS).min(width - 1.0) as usize;
-            let row_min = (pos_y - BALL_RADIUS) as usize;
-            let row_max = (pos_y + BALL_RADIUS).min(height - 1.0) as usize;
+            let col_min = self.ball_col_min[team];
+            let col_max = self.ball_col_max[team];
+            let row_min = self.ball_row_min[team];
+            let row_max = self.ball_row_max[team];
 
             let mut reflect_x = false;
             let mut reflect_y = false;

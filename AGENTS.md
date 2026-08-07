@@ -48,7 +48,7 @@ canvas.ts  draws frame
 - `app/src/protocol.ts` — the message types shared by both sides of the worker boundary.
 - `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
 - `app/src/canvas.ts` — `Canvas` singleton. Draws a `Frame` by writing the grid to a pixel-sized canvas and overlaying transparent ball strokes on a second canvas, keeping the ball layer in sync with the CSS-rendered size via a `ResizeObserver`.
-- `sim/src/lib.rs` — the physics engine. `Simulation` stores the grid as a flat RGBA pixel `Vec` (plus ball positions and velocities as flat `Vec`s) in grid-space, and owns the team color palette. Each tick runs two passes over all balls in turn: motion (move and wall-bounce, once per axis), then cell-collision. Motion is a branch-free loop that auto-vectorizes with `simd128`.
+- `sim/src/lib.rs` — the physics engine. `Simulation` stores the grid as a flat RGBA pixel `Vec` (plus ball positions and velocities as flat `Vec`s) in grid-space, and owns the team color palette. Each tick runs three passes over all balls in turn: motion (move and wall-bounce, once per axis), collision bounding boxes, then cell-collision. The first two are branch-free loops that auto-vectorize with `simd128`.
 
 ### Layout and canvas sizing
 

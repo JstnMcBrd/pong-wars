@@ -180,13 +180,7 @@ impl Simulation {
     }
 
     /// Phase 1 — move every ball and bounce it off the grid edges.
-    ///
-    /// The bounce is a compare-and-select rather than a mutating `if` block,
-    /// because selects vectorize and branches do not. `clamp` would be shorter
-    /// but its NaN semantics differ from the Wasm `f32.min` / `f32.max`
-    /// instructions, which costs fix-up code.
     fn update_motion(&mut self) {
-        // Clamp position to prevent corner-sticking.
         // TODO Maybe instead of clamping, consider reflecting off the wall and moving the remaining distance?
 
         let max_x = self.num_cols as f32 - BALL_RADIUS;

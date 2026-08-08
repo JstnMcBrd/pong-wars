@@ -9,7 +9,8 @@ use wasm_bindgen::prelude::*;
 /// so the collision bounding box covers at most 4 cells.
 const BALL_RADIUS: f32 = 0.5;
 
-/// Fraction of a cell that the ball moves per tick.
+/// Fraction of a cell that the ball moves per tick, along each axis.
+/// Seeds the velocity arrays, so a move is a plain add and a bounce is a negation.
 /// Must be <= 2 * BALL_RADIUS to guarantee no cell skipping.
 const TICK_DISTANCE: f32 = 0.5;
 
@@ -34,11 +35,18 @@ pub struct Simulation {
     /// Layout: `[y_0, y_1, …, y_n]` where `n=num_teams-1`
     ball_pos_y: Vec<f32>,
 
-    /// Layout: `[dx_0, dx_1, …, dx_n]` where `n=num_teams-1` and each value is ±1.
-    ball_dir_x: Vec<f32>,
+    /// Layout: `[vx_0, vx_1, …, vx_n]` where `n=num_teams-1` and each value is ±`TICK_DISTANCE`.
+    ball_vel_x: Vec<f32>,
 
-    /// Layout: `[dy_0, dy_1, …, dy_n]` where `n=num_teams-1` and each value is ±1.
-    ball_dir_y: Vec<f32>,
+    /// Layout: `[vy_0, vy_1, …, vy_n]` where `n=num_teams-1` and each value is ±`TICK_DISTANCE`.
+    ball_vel_y: Vec<f32>,
+
+    /// Each ball's collision bounding box, in cell coordinates.
+    /// Recomputed every tick by `update_bounds`, consumed by `update_cell_collisions`.
+    ball_col_min: Vec<usize>,
+    ball_col_max: Vec<usize>,
+    ball_row_min: Vec<usize>,
+    ball_row_max: Vec<usize>,
 }
 
 #[wasm_bindgen]
@@ -58,8 +66,13 @@ impl Simulation {
         let pixels = vec![0; num_cols * num_rows * 4];
         let ball_pos_x = vec![0.0; num_teams];
         let ball_pos_y = vec![0.0; num_teams];
-        let ball_dir_x = vec![0.0; num_teams];
-        let ball_dir_y = vec![0.0; num_teams];
+        let ball_vel_x = vec![0.0; num_teams];
+        let ball_vel_y = vec![0.0; num_teams];
+
+        let ball_col_min = vec![0; num_teams];
+        let ball_col_max = vec![0; num_teams];
+        let ball_row_min = vec![0; num_teams];
+        let ball_row_max = vec![0; num_teams];
 
         let mut sim = Simulation {
             num_cols,
@@ -70,8 +83,13 @@ impl Simulation {
             pixels,
             ball_pos_x,
             ball_pos_y,
-            ball_dir_x,
-            ball_dir_y,
+            ball_vel_x,
+            ball_vel_y,
+
+            ball_col_min,
+            ball_col_max,
+            ball_row_min,
+            ball_row_max,
         };
         sim.init();
         sim
@@ -119,7 +137,7 @@ impl Simulation {
         let num_teams_f = self.num_teams as f32;
 
         // Place balls evenly on a circle centred on the grid.
-        // Set movement direction to the closest diagonal tangent to the placement circle.
+        // Set velocity to the closest diagonal tangent to the placement circle.
         let placement_radius = f32::min(width, height) * 0.3;
         let center_x = width / 2.0;
         let center_y = height / 2.0;
@@ -131,8 +149,8 @@ impl Simulation {
             self.ball_pos_x[i] = center_x + placement_radius * cos;
             self.ball_pos_y[i] = center_y + placement_radius * sin;
 
-            self.ball_dir_x[i] = if sin < 0.0 { 1.0 } else { -1.0 };
-            self.ball_dir_y[i] = if cos >= 0.0 { 1.0 } else { -1.0 };
+            self.ball_vel_x[i] = TICK_DISTANCE * if sin < 0.0 { 1.0 } else { -1.0 };
+            self.ball_vel_y[i] = TICK_DISTANCE * if cos >= 0.0 { 1.0 } else { -1.0 };
         }
 
         // Assign each cell to the nearest ball's team on the same circle based on angle.
@@ -154,94 +172,125 @@ impl Simulation {
         }
     }
 
+    /// Advance every ball by one tick, one phase at a time.
     fn tick(&mut self) {
-        for i in 0..self.num_teams {
-            self.update_ball(i);
+        self.update_motion();
+        self.update_bounds();
+        self.update_cell_collisions();
+    }
+
+    /// Phase 1 — move every ball and bounce it off the grid edges.
+    fn update_motion(&mut self) {
+        // TODO Maybe instead of clamping, consider reflecting off the wall and moving the remaining distance?
+
+        let max_x = self.num_cols as f32 - BALL_RADIUS;
+        for (pos, vel) in self.ball_pos_x.iter_mut().zip(self.ball_vel_x.iter_mut()) {
+            let moved = *pos + *vel;
+            let below = moved < BALL_RADIUS;
+            let above = moved > max_x;
+            *pos = if below {
+                BALL_RADIUS
+            } else if above {
+                max_x
+            } else {
+                moved
+            };
+            *vel = if below || above { -*vel } else { *vel };
+        }
+
+        let max_y = self.num_rows as f32 - BALL_RADIUS;
+        for (pos, vel) in self.ball_pos_y.iter_mut().zip(self.ball_vel_y.iter_mut()) {
+            let moved = *pos + *vel;
+            let below = moved < BALL_RADIUS;
+            let above = moved > max_y;
+            *pos = if below {
+                BALL_RADIUS
+            } else if above {
+                max_y
+            } else {
+                moved
+            };
+            *vel = if below || above { -*vel } else { *vel };
         }
     }
 
-    fn update_ball(&mut self, team: usize) {
-        let width = self.num_cols as f32;
-        let height = self.num_rows as f32;
-        let team_color = self.team_colors[team];
-
-        let mut pos_x = self.ball_pos_x[team];
-        let mut pos_y = self.ball_pos_y[team];
-        let mut dir_x = self.ball_dir_x[team];
-        let mut dir_y = self.ball_dir_y[team];
-
-        // 1. Move
-
-        pos_x += dir_x * TICK_DISTANCE;
-        pos_y += dir_y * TICK_DISTANCE;
-
-        // 2. Wall bounce — clamp position to prevent corner-sticking.
-        // TODO Maybe instead of clamping, consider reflecting off the wall and moving the remaining distance?
-
-        if pos_x < BALL_RADIUS {
-            pos_x = BALL_RADIUS;
-            dir_x = 1.0;
-        }
-        if pos_x > width - BALL_RADIUS {
-            pos_x = width - BALL_RADIUS;
-            dir_x = -1.0;
-        }
-        if pos_y < BALL_RADIUS {
-            pos_y = BALL_RADIUS;
-            dir_y = 1.0;
-        }
-        if pos_y > height - BALL_RADIUS {
-            pos_y = height - BALL_RADIUS;
-            dir_y = -1.0;
-        }
-
-        // 3. Cell collision
-
-        // Bounding box of the ball's circle in cell coordinates.
-        // Because grid-space position == cell index, floor() gives the cell directly.
+    /// Phase 2 — compute every ball's collision bounding box in cell coordinates.
+    ///
+    /// Vectorizes four balls at a time because it is element-wise over the position arrays.
+    fn update_bounds(&mut self) {
         // TODO Consider using ball radius to calculate a circular bounding area
         // FIXME Does this create a square collider area?
-        let col_min = (pos_x - BALL_RADIUS).max(0.0) as usize;
-        let col_max = (pos_x + BALL_RADIUS).min(width - 1.0) as usize;
-        let row_min = (pos_y - BALL_RADIUS).max(0.0) as usize;
-        let row_max = (pos_y + BALL_RADIUS).min(height - 1.0) as usize;
 
-        let mut reflect_x = false;
-        let mut reflect_y = false;
+        let max_col = self.num_cols as f32 - 1.0;
+        for ((pos, min), max) in self
+            .ball_pos_x
+            .iter()
+            .zip(self.ball_col_min.iter_mut())
+            .zip(self.ball_col_max.iter_mut())
+        {
+            *min = (*pos - BALL_RADIUS) as usize;
+            *max = (*pos + BALL_RADIUS).min(max_col) as usize;
+        }
 
-        for row in row_min..=row_max {
-            for col in col_min..=col_max {
-                let idx = (col + row * self.num_cols) * 4;
-                if self.pixels[idx..idx + 4] != team_color {
-                    self.pixels[idx..idx + 4].copy_from_slice(&team_color);
+        let max_row = self.num_rows as f32 - 1.0;
+        for ((pos, min), max) in self
+            .ball_pos_y
+            .iter()
+            .zip(self.ball_row_min.iter_mut())
+            .zip(self.ball_row_max.iter_mut())
+        {
+            *min = (*pos - BALL_RADIUS) as usize;
+            *max = (*pos + BALL_RADIUS).min(max_row) as usize;
+        }
+    }
 
-                    // Determine reflection axis from the cell center → ball vector.
-                    let cell_cx = col as f32 + 0.5;
-                    let cell_cy = row as f32 + 0.5;
-                    let dist_x = (cell_cx - pos_x).abs();
-                    let dist_y = (cell_cy - pos_y).abs();
-                    if dist_x >= dist_y {
-                        reflect_x = true;
-                    }
-                    if dist_x <= dist_y {
-                        reflect_y = true;
+    /// Phase 3 — paint the cells each ball overlaps and reflect off the ones it captures.
+    ///
+    /// The collision pass itself cannot be vectorized.
+    /// The grid access needs a gather, which Wasm SIMD does not have.
+    fn update_cell_collisions(&mut self) {
+        for team in 0..self.num_teams {
+            let team_color = self.team_colors[team];
+            let pos_x = self.ball_pos_x[team];
+            let pos_y = self.ball_pos_y[team];
+
+            let col_min = self.ball_col_min[team];
+            let col_max = self.ball_col_max[team];
+            let row_min = self.ball_row_min[team];
+            let row_max = self.ball_row_max[team];
+
+            let mut reflect_x = false;
+            let mut reflect_y = false;
+
+            for row in row_min..row_max + 1 {
+                for col in col_min..col_max + 1 {
+                    let idx = (col + row * self.num_cols) * 4;
+                    if self.pixels[idx..idx + 4] != team_color {
+                        self.pixels[idx..idx + 4].copy_from_slice(&team_color);
+
+                        // Determine reflection axis from the cell center → ball vector.
+                        let cell_cx = col as f32 + 0.5;
+                        let cell_cy = row as f32 + 0.5;
+                        let dist_x = (cell_cx - pos_x).abs();
+                        let dist_y = (cell_cy - pos_y).abs();
+                        if dist_x >= dist_y {
+                            reflect_x = true;
+                        }
+                        if dist_x <= dist_y {
+                            reflect_y = true;
+                        }
                     }
                 }
             }
-        }
 
-        if reflect_x {
-            dir_x *= -1.0;
+            if reflect_x {
+                self.ball_vel_x[team] *= -1.0;
+            }
+            if reflect_y {
+                self.ball_vel_y[team] *= -1.0;
+            }
+            // TODO Consider calculating reflection point and reflecting off the wall and moving the remaining distance,
+            // instead of just ignoring the overlap
         }
-        if reflect_y {
-            dir_y *= -1.0;
-        }
-        // TODO Consider calculating reflection point and reflecting off the wall and moving the remaining distance,
-        // instead of just ignoring the overlap
-
-        self.ball_pos_x[team] = pos_x;
-        self.ball_pos_y[team] = pos_y;
-        self.ball_dir_x[team] = dir_x;
-        self.ball_dir_y[team] = dir_y;
     }
 }

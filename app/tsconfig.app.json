@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["src"],
-  "exclude": ["src/worker.ts"],
-  "compilerOptions": {
-    "types": ["vite/client"],
-    "lib": ["ESNext", "DOM"]
-  }
-}

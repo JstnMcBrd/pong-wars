@@ -6,71 +6,99 @@ Keep `AGENTS.md` and `README.md` up-to-date whenever you modify the project.
 
 Note that `AGENTS.md` is a high-level overview. Keep updates brief and conceptual and do not simply restate implementation details. Agents should read the code and comments for more information.
 
-## Commands
+High-level descriptions should only be updated when they become inaccurate due to large changes, and your updates should not increase the overall level of detail.
 
-The repo is an npm workspace with two packages: `app` (the Vite UI) and `sim` (the Rust/Wasm physics engine). Root scripts fan out across both; target one with `--workspace=...`.
+## Commands
 
 ```bash
 npm install         # Install dependencies
-npm run dev         # Dev server (builds Wasm first, then starts Vite)
+npm run dev         # Dev server
 npm run build       # Production build
 npm run preview     # Preview production build
 npm run fmt         # Format
 npm run lint        # Lint
-npm run check       # Type-check (note: sim bindings must be built first to pass app type-check)
+npm run check       # Type-check
 ```
 
-There are no tests. The Rust `wasm32-unknown-unknown` target must be installed for any script that touches the Wasm crate, including `lint` and `check`. `wasm-pack` installs the target automatically, and CI adds it explicitly.
-
-The app imports the physics engine as a normal workspace package (`import … from "sim"`). The `sim` package's `package.json` points at its generated `pkg/` output.
+There are no tests. Verifying a change means running the app in a browser — and for shader changes that is the _only_ check. See "Shaders".
 
 ## Architecture
 
-A browser-based multi-ball pong simulation where each ball paints the grid with its team color. Physics runs in a **Web Worker** backed by a **Rust/Wasm** engine, keeping the main thread free for rendering.
+A browser-based multi-ball pong simulation where each ball paints the grid with its team color.
+Both the physics and the rendering run on the GPU through **WebGPU**; the main thread only encodes commands.
 
 ### Data flow
 
 ```
-main thread                                   Web Worker
-──────────────────────────────                ──────────────────────────────
-main.ts  ────[reset / tick]───────────────────► worker.ts
-                                                  │  Rust Simulation (sim)
-                                                  │    tick_n(n)
-                                                  │    get_pixels()     → Uint8ClampedArray (RGBA)
-                                                  │    get_ball_pos_x() → Float32Array
-                                                  │    get_ball_pos_y() → Float32Array
- ◄──────────────[frame: epoch + Frame]────────────┘  (transferred zero-copy)
-canvas.ts  draws frame
+reset()  ─► init_grid  ──┐
+         ─► init_balls ──┤
+                         ▼
+              grid buffer + ball buffer      (never leave the GPU)
+                         ▲           │
+render() ─► sim ─────────┘           │       compute pass, skipped while paused
+         ─► grid quad + ball quads ◄─┘       render pass
 ```
 
-- `app/src/main.ts` — orchestration layer. Wires the singletons together and drives the per-frame loop. Each animation frame asks for the next frame *before* drawing the one that arrived, so the worker computes while the main thread draws. When settings are modified, the loop posts at most one reset per frame.
-- `app/src/worker.ts` — thin wrapper; translates `reset` and `tick` messages into Rust `Simulation` calls and transfers results back zero-copy.
-- `app/src/protocol.ts` — the message types shared by both sides of the worker boundary.
-- `app/src/sidebar.ts` — `Sidebar` singleton. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
-- `app/src/canvas.ts` — `Canvas` singleton. Draws a `Frame` by writing the grid to a pixel-sized canvas and overlaying transparent ball strokes on a second canvas, keeping the ball layer in sync with the CSS-rendered size via a `ResizeObserver`.
-- `sim/src/lib.rs` — the physics engine. `Simulation` stores the grid as a flat RGBA pixel `Vec` (plus ball positions and velocities as flat `Vec`s) in grid-space, and owns the team color palette. Each tick runs three passes over all balls in turn: motion (move and wall-bounce, once per axis), collision bounding boxes, then cell-collision. The first two are branch-free loops that auto-vectorize with `simd128`.
+### Files
 
-### Layout and canvas sizing
+- `src/main.ts` — bootstrap and the frame loop. Acquires the device, builds the sidebar, seeds the engine, then drives one `Engine.render()` per animation frame. Resets are coalesced to at most one per frame. Falls back to a failure message if WebGPU cannot be set up.
+- `src/gpu.ts` — the GPU front door. Acquires an adapter and device, and requests the adapter's best compute limits. Throws `GpuError` when WebGPU is unavailable.
+- `src/engine.ts` — owns every device resource: four uniform buffers, the grid and ball storage buffers, three bind group layouts, and five pipelines. `reset()` reallocates the simulation state and seeds it; `render()` encodes one optional compute pass plus one render pass into a single command buffer.
+- `src/sidebar.ts` — `Sidebar` class. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
+- `shaders/main.wgsl` — the physics and the renderer, in one module.
 
-A minimalist `#header` (title and attribution links) sits at the top of the `body`, with the canvas and sidebar panel below in an `#app` flex container. A media query in `styles.css` flips the `#app` layout between **side-by-side** (landscape) and **stacked** (portrait), and the square canvas is sized to fit the viewport with room reserved for both the header and the panel.
+### The one thing to understand before changing the physics
+
+Ticks are strictly sequential, so the only parallelism available is across balls. `sim` is therefore dispatched as a **single workgroup** that loops over every tick internally and calls `storageBarrier()` between them. That barrier only orders writes within one workgroup, so dispatching more than one would read a half-finished tick — `dispatchWorkgroups(1)` is deliberate.
+
+Within a tick the balls run concurrently, so a ball sees the grid as of the start of the tick rather than mid-tick writes from other balls, and two balls claiming the same cell resolve last-write-wins. **The simulation is not reproducible**, by design.
+
+### Bindings
+
+`@group(0)` is the settings — four small uniform buffers, one per setting, created once and never rebuilt. `@group(1)` is the simulation state, reallocated by `reset()` whenever the grid size or team count changes.
+
+Read-only aliases are declared for the `@group(1)` buffers to allow the vertex and fragment stages to read them. Two variables may share one binding as long as no single entry point uses both. The compute pipelines bind those buffers through a `storage` layout, the render pipelines through a `read-only-storage` layout, over the same memory.
+
+Binding numbers are written out in both the shader and `engine.ts`, and nothing checks that the two agree. After touching either list, read them side by side.
+
+### Shaders
+
+Everything lives in one module, `shaders/main.wgsl`, imported by `engine.ts` with Vite's built-in `?raw`. WGSL has no module system, so one file is what lets the physics and the renderer share declarations.
+
+> If you need separate shaders with module imports in the future, investigate WESL.
+
+**Nothing validates or formats the shader.** `oxfmt` and `oxlint` ignore `.wgsl`, and the build only copies the file into the bundle as a string, so a broken shader passes every automated check and fails at `createShaderModule` when the page loads. After any shader edit, run the app and watch the console.
+
+Debugging is thin by nature: there is no way to print from a shader. The two techniques that work are copying a storage buffer back to the CPU through a `MAP_READ` staging buffer, and temporarily returning a suspect value as a color from a fragment entry point.
 
 ### Coordinate space
 
-All physics operates in **grid-space** (1 unit = 1 cell). `canvas.ts` converts to pixel-space.
+All physics operates in **grid-space** (1 unit = 1 cell). The shaders convert to clip space.
+
+### Limits
+
+The grid-size slider's maximum is either the largest buffer the device can hold, or `MAX_GRID_SIZE_CAP` in `sidebar.ts`, whichever is lowest.
+
+The minimum storage-buffer binding limit every conformant adapter must provide is 128 MB, which could hold a grid of ~5,700². To raise the grid-size limit even higher, a higher `maxStorageBufferBindingSize` would need to be requested in `gpu.ts`, and the grid would have to be split across several bindings.
+
+Workgroup sizes are not hardcoded. `gpu.ts` requests the adapter's best compute limits, and `engine.ts` derives each workgroup size from them and supplies it as a shader `override`, then derives the dispatch count from that size and the item count. Nothing needs editing when the hardware changes.
 
 ### TypeScript
 
-`app` splits its TypeScript into three programs via project references, because the environments need conflicting global types.
+Two programs, because the browser code and the config files need different globals.
 
-- `tsconfig.app.json` — the browser code in `src` (DOM lib, `vite/client` types). Excludes `worker.ts`.
-- `tsconfig.worker.json` — `worker.ts` alone (WebWorker lib, no `@types`).
-- `tsconfig.node.json` — the Node config files (`*.config.ts`, `@types/node`).
+- `tsconfig.app.json` — `src` (`@types/web` and `vite/client`). It uses `@types/web` in place of the built-in `dom` lib because TypeScript 7.0.2's copy is missing WebGPU's bitflag namespaces. The file explains when to undo that.
+- `tsconfig.node.json` — the root config files (`*.config.ts`, `@types/node`).
 
-`npm run check` runs `tsc --build`, which type-checks all programs. Ensure correctness by type-checking after edits.
+`npm run check` runs `tsc --build`, which type-checks both. Ensure correctness by type-checking after edits.
 
 ### Vite base path
 
-`app/vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment. Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically. Hardcoded URL strings in JS/TS are not rewritten and will break under the subpath.
+`vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment.
+
+Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically. Hardcoded URL strings in JS/TS are not rewritten and will break under the subpath.
+
+`shaders/main.wgsl` is imported with `?raw` — see "Shaders" above.
 
 ## Deployment
 

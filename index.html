@@ -16,11 +16,19 @@
         <a href="https://github.com/JstnMcBrd/pong-wars" target="_blank" rel="noopener">Source</a>
       </nav>
     </header>
+
+    <!-- Shown in place of the app when no WebGPU device can be acquired. -->
+    <section id="failure" hidden>
+      <h2>WebGPU required</h2>
+      <p id="failure-detail"></p>
+      <p>
+        The simulation runs entirely on the GPU. Check what your setup supports at
+        <a href="https://webgpucheck.com/" target="_blank" rel="noopener">webgpucheck.com</a>.
+      </p>
+    </section>
+
     <main id="app">
-      <div id="canvas">
-        <canvas id="grid"></canvas>
-        <canvas id="balls"></canvas>
-      </div>
+      <canvas id="view"></canvas>
 
       <div id="sidebar">
         <div id="controls">
@@ -86,7 +94,6 @@
         </div>
       </div>
     </main>
-
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

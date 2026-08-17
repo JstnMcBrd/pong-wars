@@ -2,7 +2,9 @@
 
 > Inspired by [vnglst/pong-wars](https://github.com/vnglst/pong-wars)
 
-An implementation of the classic "Pong Wars" simulation with a few key changes:
+An implementation of the classic "Pong Wars" simulation, powered by WebGPU.
+
+Additional features:
 
 - Settings and customizations
 - Support for more than two teams
@@ -12,12 +14,12 @@ More balls, more squares, more speed!
 
 ## Architecture
 
-- **App**
-  - Uses TypeScript + Vite, transpiles to pure HTML/CSS/JS for the browser
-  - Renders the grid and balls every frame
-- **Sim**
-  - Written in Rust, compiles to Wasm
-  - Runs in a Web Worker so physics never blocks the main thread
-  - Supports any number of ticks per frame for turbo-speed simulation
+**App** — TypeScript + Vite, transpiled to pure HTML/CSS/JS for the browser
 
-The separation between rendering and physics allows them to run concurrently, enabling blindly fast simulation speeds!
+**Shaders** — WebGPU WGSL, handles simulation and rendering, runs on the GPU
+
+## Requirements
+
+WebGPU, and a supported graphics device. There is no fallback.
+
+See what your setup supports at [webgpucheck.com](https://webgpucheck.com/).

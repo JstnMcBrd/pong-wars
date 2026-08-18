@@ -10,15 +10,19 @@ Update a description only when a large change makes it inaccurate. Do not increa
 
 ## Commands
 
+This project uses [Vite+](https://viteplus.dev), a unified toolchain for web development.
+
 ```bash
-npm install         # Install dependencies
-npm run dev         # Dev server
-npm run build       # Production build
-npm run preview     # Preview production build
-npm run fmt         # Format
-npm run lint        # Lint
-npm run check       # Type-check
+vp install   # Install dependencies
+vp dev       # Dev server
+vp build     # Production build
+vp preview   # Preview production build
+vp check     # Format + lint + type-check (apply fixes with --fix)
 ```
+
+`package.json` pins the Node and npm versions in `devEngines`. `vp` applies these versions automatically.
+
+`package.json` aliases the `vite` dependency to `@voidzero-dev/vite-plus-core`, with a matching `overrides` entry. Thus each import of `"vite"` gets Vite+ core. This is a temporary workaround, because Vite+ rewrites tool identities (see [voidzero-dev/vite-plus#2023](https://github.com/voidzero-dev/vite-plus/issues/2023)). Remove the alias and the override when that issue is resolved.
 
 There are no tests. To verify a change, run the app in a browser. For shader changes, this is the only check (see [Shaders](#shaders)).
 
@@ -96,13 +100,17 @@ There are two TypeScript programs, because the browser code and the config files
 - `tsconfig.app.json` — `src`, with `@types/web` and `vite/client`. It uses `@types/web` instead of the built-in `DOM` lib, because the TypeScript 7.0.2 `DOM` lib does not have WebGPU's bitflag namespaces. The file tells when to undo this.
 - `tsconfig.node.json` — the root config files (`*.config.ts`), with `@types/node`.
 
-`npm run check` runs `tsc --build`, which type-checks both programs. Type-check after each edit.
+There is no local `typescript` package, and none is necessary. `oxlint-tsgolint` does the type-aware linting. VS Code uses its internal TypeScript version for the editor language service.
+
+Type-check after each edit.
 
 ### Static assets
 
 Reference static assets with `import` or `new URL(…, import.meta.url)`, so that Vite rewrites the paths.
 
 ## Deployment
+
+The workflows use `voidzero-dev/setup-vp` to set up the toolchain.
 
 - `.github/workflows/ci.yml` runs checks on each pull request and each push to `main`.
 - `.github/workflows/cd.yml` deploys to GitHub Pages on each push to `main`.

@@ -3,13 +3,24 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "workspaces": ["sim", "app"],
   "scripts": {
-    "dev": "npm run dev --workspaces",
-    "build": "npm run build --workspaces",
-    "preview": "npm run preview --workspace=app",
-    "fmt": "npm run fmt --workspaces",
-    "lint": "npm run lint --workspaces",
-    "check": "npm run check --workspaces"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "fmt": "oxfmt",
+    "lint": "oxlint",
+    "check": "tsc --build"
+  },
+  "dependencies": {
+    "lucide": "^1.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/web": "^0.0.354",
+    "oxfmt": "^0.54.0",
+    "oxlint": "^1.69.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.0"
   }
 }

@@ -1,6 +1,10 @@
+import { createIcons, Pause, Play, Square } from "lucide";
+
+createIcons({ icons: { Pause, Play, Square } });
+
 type SimState = "preview" | "running" | "paused";
 
-// ── Defaults and bounds ──────────────────────────────────────────────────────
+// ── Settings ────────────────────────────────────────────────────────────────
 
 const DEFAULTS = {
   gridSize: 26,
@@ -8,33 +12,44 @@ const DEFAULTS = {
   ticksPerFrame: 1,
 };
 
-const BOUNDS = {
-  gridSize: { min: 10, max: 500 },
-  numTeams: { min: 2 },
-  ticksPerFrame: { min: 1, max: 500 },
-} satisfies Record<keyof typeof DEFAULTS, { min: number; max?: number }>;
+/** Largest grid we choose to offer, even if the device could hold more. */
+const MAX_GRID_SIZE_CAP = 500;
+
+function getBounds(gpuMaxGridSize: number) {
+  return {
+    gridSize: { min: 10, max: Math.min(gpuMaxGridSize, MAX_GRID_SIZE_CAP) },
+    numTeams: {
+      min: 2,
+      /** The maximum number of teams depends on the current grid size. */
+      max(gridSize: number): number {
+        const circumference = Math.PI * 2 * (gridSize / 4);
+        return Math.floor(circumference / 2);
+      },
+    },
+    ticksPerFrame: { min: 1, max: 500 },
+  };
+}
+
+// ── FPS counter ─────────────────────────────────────────────────────────────
 
 const FPS_UPDATE_INTERVAL_MS = 500;
 const FPS_WARN_THRESHOLD = 60;
 const FPS_DANGER_THRESHOLD = 30;
 
-function computeMaxTeams(gridSize: number): number {
-  const circumference = Math.PI * 2 * (gridSize / 4);
-  return Math.floor(circumference / 2);
-}
-
-// ── Sidebar class ────────────────────────────────────────────────────────────
+// ── Sidebar class ───────────────────────────────────────────────────────────
 
 /**
  * DOM wrapper for the sidebar panel. Owns the simulation control buttons
  * (start/stop/pause/resume) and the settings sliders (size/teams/speed),
  * tracks the {@link SimState}, and exposes the live setting values.
  */
-class Sidebar {
+export class Sidebar {
   private readonly btnStart: HTMLButtonElement;
   private readonly btnStop: HTMLButtonElement;
   private readonly btnPause: HTMLButtonElement;
   private readonly btnResume: HTMLButtonElement;
+
+  private readonly sliderBounds: ReturnType<typeof getBounds>;
 
   private readonly inpSize: HTMLInputElement;
   private readonly valSize: HTMLSpanElement;
@@ -58,11 +73,14 @@ class Sidebar {
   private _state: SimState = "preview";
   private resetCb: (() => void) | null = null;
 
-  constructor() {
+  /** @param gpuMaxGridSize the largest grid the GPU can handle. */
+  public constructor(gpuMaxGridSize: number) {
     this.btnStart = document.getElementById("btn-start") as HTMLButtonElement;
     this.btnStop = document.getElementById("btn-stop") as HTMLButtonElement;
     this.btnPause = document.getElementById("btn-pause") as HTMLButtonElement;
     this.btnResume = document.getElementById("btn-resume") as HTMLButtonElement;
+
+    this.sliderBounds = getBounds(gpuMaxGridSize);
 
     this.inpSize = document.getElementById("inp-size") as HTMLInputElement;
     this.valSize = document.getElementById("val-size") as HTMLSpanElement;
@@ -159,18 +177,18 @@ class Sidebar {
   // ── Private setup ─────────────────────────────────────────────────────────
 
   private initSliders(): void {
-    this.inpSize.min = String(BOUNDS.gridSize.min);
-    this.inpSize.max = String(BOUNDS.gridSize.max);
+    this.inpSize.min = String(this.sliderBounds.gridSize.min);
+    this.inpSize.max = String(this.sliderBounds.gridSize.max);
     this.inpSize.value = String(DEFAULTS.gridSize);
     this.valSize.textContent = `${DEFAULTS.gridSize}x${DEFAULTS.gridSize}`;
 
-    this.inpTeams.min = String(BOUNDS.numTeams.min);
-    this.inpTeams.max = String(computeMaxTeams(DEFAULTS.gridSize));
+    this.inpTeams.min = String(this.sliderBounds.numTeams.min);
+    this.inpTeams.max = String(this.sliderBounds.numTeams.max(DEFAULTS.gridSize));
     this.inpTeams.value = String(DEFAULTS.numTeams);
     this.valTeams.textContent = String(DEFAULTS.numTeams);
 
-    this.inpSpeed.min = String(BOUNDS.ticksPerFrame.min);
-    this.inpSpeed.max = String(BOUNDS.ticksPerFrame.max);
+    this.inpSpeed.min = String(this.sliderBounds.ticksPerFrame.min);
+    this.inpSpeed.max = String(this.sliderBounds.ticksPerFrame.max);
     this.inpSpeed.value = String(DEFAULTS.ticksPerFrame);
     this.valSpeed.textContent = String(DEFAULTS.ticksPerFrame);
   }
@@ -197,7 +215,9 @@ class Sidebar {
   /** Nudge a slider by `delta`, clamped to its bounds. */
   private step(input: HTMLInputElement, delta: number): void {
     const next = Math.min(Math.max(input.valueAsNumber + delta, +input.min), +input.max);
-    if (next === input.valueAsNumber) return;
+    if (next === input.valueAsNumber) {
+      return;
+    }
     input.valueAsNumber = next;
     // Trigger the change callback, as if the user had dragged the slider.
     input.dispatchEvent(new Event("input"));
@@ -220,7 +240,7 @@ class Sidebar {
       this.valSize.textContent = `${gridSize}x${gridSize}`;
 
       const curNumTeams = this.numTeams;
-      const newMaxTeams = computeMaxTeams(gridSize);
+      const newMaxTeams = this.sliderBounds.numTeams.max(gridSize);
       this.inpTeams.max = String(newMaxTeams);
 
       if (curNumTeams > newMaxTeams) {
@@ -243,5 +263,3 @@ class Sidebar {
     });
   }
 }
-
-export const sidebar = new Sidebar();

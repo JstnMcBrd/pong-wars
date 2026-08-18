@@ -26,12 +26,15 @@ export async function requestGpu(canvas: HTMLCanvasElement): Promise<Gpu> {
   }
 
   // Request the highest possible limits to optimize workgroup sizes.
-  const device = await adapter.requestDevice({
-    requiredLimits: {
-      maxComputeWorkgroupSizeX: adapter.limits.maxComputeWorkgroupSizeX, // The maximum value of the `workgroup_size` X dimension.
-      maxComputeWorkgroupSizeY: adapter.limits.maxComputeWorkgroupSizeY, // The maximum value of the `workgroup_size` Y dimension.
-      maxComputeInvocationsPerWorkgroup: adapter.limits.maxComputeInvocationsPerWorkgroup, // The maximum value of the product of the `workgroup_size` dimensions.
-    },
+  const requiredLimits = {
+    maxComputeWorkgroupSizeX: adapter.limits.maxComputeWorkgroupSizeX, // The maximum value of the `workgroup_size` X dimension.
+    maxComputeWorkgroupSizeY: adapter.limits.maxComputeWorkgroupSizeY, // The maximum value of the `workgroup_size` Y dimension.
+    maxComputeInvocationsPerWorkgroup: adapter.limits.maxComputeInvocationsPerWorkgroup, // The maximum value of the product of the `workgroup_size` dimensions.
+  };
+
+  // Request a device with the required limits.
+  const device = await adapter.requestDevice({ requiredLimits }).catch((cause) => {
+    throw new GpuError("Your machine could not provide a WebGPU device.", { cause });
   });
 
   // Losing the GPU device is an unrecoverable error, so alert the user and refresh.

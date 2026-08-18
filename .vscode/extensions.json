@@ -1,7 +1,7 @@
 {
   "recommendations": [
     "github.vscode-github-actions",
-    "oxc.oxc-vscode",
+    "VoidZero.vite-plus-extension-pack",
     "wgsl-analyzer.wgsl-analyzer"
   ]
 }

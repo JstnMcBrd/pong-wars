@@ -12,7 +12,7 @@
     "check": "tsc --build"
   },
   "dependencies": {
-    "lucide": "^1.17.0"
+    "lucide": "^1.31.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

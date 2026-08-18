@@ -10,15 +10,19 @@ High-level descriptions should only be updated when they become inaccurate due t
 
 ## Commands
 
+This project uses [Vite+](https://viteplus.dev), a unified toolchain for web development.
+
 ```bash
-npm install         # Install dependencies
-npm run dev         # Dev server
-npm run build       # Production build
-npm run preview     # Preview production build
-npm run fmt         # Format
-npm run lint        # Lint
-npm run check       # Type-check
+vp install   # Install dependencies
+vp dev       # Dev server
+vp build     # Production build
+vp preview   # Preview production build
+vp check     # Format + lint + type-check (apply fixes with --fix)
 ```
+
+Node and npm versions are pinned in `devEngines` in `package.json` and automatically applied by `vp`.
+
+The `vite` dependency in `package.json` is aliased to `@voidzero-dev/vite-plus-core` (with a matching `overrides` entry) so that anything importing `"vite"` gets Vite+ core instead. This is a workaround until Vite+ stops rewriting tool identities — see [voidzero-dev/vite-plus#2023](https://github.com/voidzero-dev/vite-plus/issues/2023). The alias and override can be removed once that is resolved (probably by `vite-plus@1.0.0`).
 
 There are no tests. Verifying a change means running the app in a browser — and for shader changes that is the _only_ check. See "Shaders".
 
@@ -90,7 +94,9 @@ Two programs, because the browser code and the config files need different globa
 - `tsconfig.app.json` — `src` (`@types/web` and `vite/client`). It uses `@types/web` in place of the built-in `dom` lib because TypeScript 7.0.2's copy is missing WebGPU's bitflag namespaces. The file explains when to undo that.
 - `tsconfig.node.json` — the root config files (`*.config.ts`, `@types/node`).
 
-`npm run check` runs `tsc --build`, which type-checks both. Ensure correctness by type-checking after edits.
+There is no local `typescript` package. It isn't needed for the CLI because type-aware linting is handled by `oxlint-tsgolint`, and VSCode has an internal TypeScript version to use for editor language service.
+
+Ensure correctness by type-checking after edits.
 
 ### Vite base path
 
@@ -101,6 +107,8 @@ Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite
 `shaders/main.wgsl` is imported with `?raw` — see "Shaders" above.
 
 ## Deployment
+
+Workflows are streamlined by `voidzero-dev/setup-vp`.
 
 `.github/workflows/ci.yml` runs checks on every PR and every push to `main`.
 `.github/workflows/cd.yml` deploys to GitHub Pages on every push to `main`.

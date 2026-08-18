@@ -3,24 +3,28 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "fmt": "oxfmt",
-    "lint": "oxlint",
-    "check": "tsc --build"
-  },
   "dependencies": {
     "lucide": "^1.17.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
     "@types/web": "^0.0.354",
-    "oxfmt": "^0.54.0",
-    "oxlint": "^1.69.0",
-    "oxlint-tsgolint": "^7.0.2001",
-    "typescript": "^7.0.2",
-    "vite": "^8.2.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
+    "vite-plus": "0.2.9"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "12.0.2",
+      "onFail": "download"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "24.19.0",
+      "onFail": "download"
+    }
   }
 }

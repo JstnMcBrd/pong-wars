@@ -6,28 +6,13 @@ type SimState = "preview" | "running" | "paused";
 
 // ── Settings ────────────────────────────────────────────────────────────────
 
-const DEFAULTS = {
-  gridSize: 26,
-  numTeams: 2,
-  ticksPerFrame: 1,
-};
-
 /** Largest grid we choose to offer, even if the device could hold more. */
 const MAX_GRID_SIZE_CAP = 500;
 
-function getBounds(gpuMaxGridSize: number) {
-  return {
-    gridSize: { min: 10, max: Math.min(gpuMaxGridSize, MAX_GRID_SIZE_CAP) },
-    numTeams: {
-      min: 2,
-      /** The maximum number of teams depends on the current grid size. */
-      max(gridSize: number): number {
-        const circumference = Math.PI * 2 * (gridSize / 4);
-        return Math.floor(circumference / 2);
-      },
-    },
-    ticksPerFrame: { min: 1, max: 500 },
-  };
+/** The maximum number of teams depends on the current grid size. */
+function maxTeams(gridSize: number): number {
+  const circumference = Math.PI * 2 * (gridSize / 4);
+  return Math.floor(circumference / 2);
 }
 
 // ── FPS counter ─────────────────────────────────────────────────────────────
@@ -49,22 +34,9 @@ export class Sidebar {
   private readonly btnPause: HTMLButtonElement;
   private readonly btnResume: HTMLButtonElement;
 
-  private readonly sliderBounds: ReturnType<typeof getBounds>;
-
-  private readonly inpSize: HTMLInputElement;
-  private readonly valSize: HTMLSpanElement;
-  private readonly decSize: HTMLButtonElement;
-  private readonly incSize: HTMLButtonElement;
-
-  private readonly inpTeams: HTMLInputElement;
-  private readonly valTeams: HTMLSpanElement;
-  private readonly decTeams: HTMLButtonElement;
-  private readonly incTeams: HTMLButtonElement;
-
-  private readonly inpSpeed: HTMLInputElement;
-  private readonly valSpeed: HTMLSpanElement;
-  private readonly decSpeed: HTMLButtonElement;
-  private readonly incSpeed: HTMLButtonElement;
+  private readonly gridSizeSlider: Slider;
+  private readonly numTeamsSlider: Slider;
+  private readonly ticksPerFrameSlider: Slider;
 
   private readonly fpsCounter: HTMLSpanElement;
   private fpsFrameCount = 0;
@@ -80,29 +52,34 @@ export class Sidebar {
     this.btnPause = document.getElementById("btn-pause") as HTMLButtonElement;
     this.btnResume = document.getElementById("btn-resume") as HTMLButtonElement;
 
-    this.sliderBounds = getBounds(gpuMaxGridSize);
+    this.gridSizeSlider = new Slider("grid-size", {
+      min: 10,
+      max: Math.min(gpuMaxGridSize, MAX_GRID_SIZE_CAP),
+      default: 26,
+      format: (gridSize) => `${gridSize}x${gridSize}`,
+      onInput: () => {
+        this.numTeamsSlider.max = maxTeams(this.gridSizeSlider.value);
+        this.resetCb?.();
+      },
+    });
 
-    this.inpSize = document.getElementById("inp-size") as HTMLInputElement;
-    this.valSize = document.getElementById("val-size") as HTMLSpanElement;
-    this.decSize = document.getElementById("dec-size") as HTMLButtonElement;
-    this.incSize = document.getElementById("inc-size") as HTMLButtonElement;
+    this.numTeamsSlider = new Slider("num-teams", {
+      min: 2,
+      max: maxTeams(this.gridSizeSlider.value),
+      default: 2,
+      onInput: () => this.resetCb?.(),
+    });
 
-    this.inpTeams = document.getElementById("inp-teams") as HTMLInputElement;
-    this.valTeams = document.getElementById("val-teams") as HTMLSpanElement;
-    this.decTeams = document.getElementById("dec-teams") as HTMLButtonElement;
-    this.incTeams = document.getElementById("inc-teams") as HTMLButtonElement;
-
-    this.inpSpeed = document.getElementById("inp-speed") as HTMLInputElement;
-    this.valSpeed = document.getElementById("val-speed") as HTMLSpanElement;
-    this.decSpeed = document.getElementById("dec-speed") as HTMLButtonElement;
-    this.incSpeed = document.getElementById("inc-speed") as HTMLButtonElement;
+    this.ticksPerFrameSlider = new Slider("ticks-per-frame", {
+      min: 1,
+      max: 500,
+      default: 1,
+      onInput: () => {}, // Speed affects running speed only; no simulation reset needed.
+    });
 
     this.fpsCounter = document.getElementById("fps-counter") as HTMLSpanElement;
 
-    this.initSliders();
     this.wireButtons();
-    this.wireSliders();
-    this.wireStepButtons();
     this.setState("preview");
   }
 
@@ -115,13 +92,13 @@ export class Sidebar {
   // ── DOM-backed setting getters ──────────────────────────────────────────────
 
   public get gridSize(): number {
-    return this.inpSize.valueAsNumber;
+    return this.gridSizeSlider.value;
   }
   public get numTeams(): number {
-    return this.inpTeams.valueAsNumber;
+    return this.numTeamsSlider.value;
   }
   public get ticksPerFrame(): number {
-    return this.inpSpeed.valueAsNumber;
+    return this.ticksPerFrameSlider.value;
   }
 
   // ── Public methods ────────────────────────────────────────────────────────
@@ -170,28 +147,11 @@ export class Sidebar {
 
     // Lock the reset-required sliders (size, teams) while the simulation is active.
     const locked = state !== "preview";
-    this.inpSize.disabled = locked;
-    this.inpTeams.disabled = locked;
+    this.gridSizeSlider.disabled = locked;
+    this.numTeamsSlider.disabled = locked;
   }
 
   // ── Private setup ─────────────────────────────────────────────────────────
-
-  private initSliders(): void {
-    this.inpSize.min = String(this.sliderBounds.gridSize.min);
-    this.inpSize.max = String(this.sliderBounds.gridSize.max);
-    this.inpSize.value = String(DEFAULTS.gridSize);
-    this.valSize.textContent = `${DEFAULTS.gridSize}x${DEFAULTS.gridSize}`;
-
-    this.inpTeams.min = String(this.sliderBounds.numTeams.min);
-    this.inpTeams.max = String(this.sliderBounds.numTeams.max(DEFAULTS.gridSize));
-    this.inpTeams.value = String(DEFAULTS.numTeams);
-    this.valTeams.textContent = String(DEFAULTS.numTeams);
-
-    this.inpSpeed.min = String(this.sliderBounds.ticksPerFrame.min);
-    this.inpSpeed.max = String(this.sliderBounds.ticksPerFrame.max);
-    this.inpSpeed.value = String(DEFAULTS.ticksPerFrame);
-    this.valSpeed.textContent = String(DEFAULTS.ticksPerFrame);
-  }
 
   private wireButtons(): void {
     this.btnStart.addEventListener("click", () => {
@@ -211,55 +171,84 @@ export class Sidebar {
       this.setState("running");
     });
   }
+}
 
-  /** Nudge a slider by `delta`, clamped to its bounds. */
-  private step(input: HTMLInputElement, delta: number): void {
-    const next = Math.min(Math.max(input.valueAsNumber + delta, +input.min), +input.max);
-    if (next === input.valueAsNumber) {
+// ── Slider class ────────────────────────────────────────────────────────────
+
+/**
+ * DOM wrapper for one labeled range input and its decrement/increment buttons.
+ * Finds its own elements by convention, so the four ids stay in agreement:
+ * `inp-<id>`, `val-<id>`, `dec-<id>`, `inc-<id>`.
+ */
+class Slider {
+  private readonly input: HTMLInputElement;
+  private readonly label: HTMLSpanElement;
+  private readonly format: (value: number) => string;
+  private readonly onInput: () => void;
+
+  public constructor(
+    id: string,
+    options: {
+      min: number;
+      max: number;
+      default: number;
+      /** Renders the value into the label. Defaults to `String`. */
+      format?: (value: number) => string;
+      onInput: () => void;
+    },
+  ) {
+    this.input = document.getElementById(`inp-${id}`) as HTMLInputElement;
+    this.label = document.getElementById(`val-${id}`) as HTMLSpanElement;
+    const dec = document.getElementById(`dec-${id}`) as HTMLButtonElement;
+    const inc = document.getElementById(`inc-${id}`) as HTMLButtonElement;
+
+    this.format = options.format ?? String;
+    this.onInput = options.onInput;
+
+    this.input.min = String(options.min);
+    this.input.max = String(options.max);
+    this.input.value = String(options.default);
+    this.paint();
+
+    this.input.addEventListener("input", () => this.changed());
+    dec.addEventListener("click", () => this.step(-1));
+    inc.addEventListener("click", () => this.step(+1));
+  }
+
+  public get value(): number {
+    return this.input.valueAsNumber;
+  }
+
+  public set max(max: number) {
+    this.input.max = String(max);
+
+    // The browser automatically clamps the value, so all we need to do is repaint.
+    this.paint();
+
+    // `onInput` does not fire — the caller already knows the setting changed.
+  }
+
+  public set disabled(disabled: boolean) {
+    this.input.disabled = disabled;
+  }
+
+  /** Nudge the value by `delta`, clamped to the bounds. */
+  private step(delta: number): void {
+    const next = Math.min(Math.max(this.value + delta, +this.input.min), +this.input.max);
+    if (next === this.value) {
       return;
     }
-    input.valueAsNumber = next;
-    // Trigger the change callback, as if the user had dragged the slider.
-    input.dispatchEvent(new Event("input"));
+    this.input.valueAsNumber = next;
+    this.changed();
   }
 
-  private wireStepButtons(): void {
-    this.decSize.addEventListener("click", () => this.step(this.inpSize, -1));
-    this.incSize.addEventListener("click", () => this.step(this.inpSize, +1));
-
-    this.decTeams.addEventListener("click", () => this.step(this.inpTeams, -1));
-    this.incTeams.addEventListener("click", () => this.step(this.inpTeams, +1));
-
-    this.decSpeed.addEventListener("click", () => this.step(this.inpSpeed, -1));
-    this.incSpeed.addEventListener("click", () => this.step(this.inpSpeed, +1));
+  /** Both a slider drag and a step button land here. */
+  private changed(): void {
+    this.paint();
+    this.onInput();
   }
 
-  private wireSliders(): void {
-    this.inpSize.addEventListener("input", () => {
-      const gridSize = this.inpSize.valueAsNumber;
-      this.valSize.textContent = `${gridSize}x${gridSize}`;
-
-      const curNumTeams = this.numTeams;
-      const newMaxTeams = this.sliderBounds.numTeams.max(gridSize);
-      this.inpTeams.max = String(newMaxTeams);
-
-      if (curNumTeams > newMaxTeams) {
-        // `numTeams` is automatically clamped when the max is updated.
-        // But if that happens, we need to update the UI and trigger the change callback.
-        this.inpTeams.dispatchEvent(new Event("input"));
-      } else {
-        this.resetCb?.();
-      }
-    });
-
-    this.inpTeams.addEventListener("input", () => {
-      this.valTeams.textContent = this.inpTeams.value;
-      this.resetCb?.();
-    });
-
-    this.inpSpeed.addEventListener("input", () => {
-      this.valSpeed.textContent = this.inpSpeed.value;
-      // ticksPerFrame affects running speed only; no simulation reset needed.
-    });
+  private paint(): void {
+    this.label.textContent = this.format(this.value);
   }
 }

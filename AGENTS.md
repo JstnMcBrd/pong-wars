@@ -44,7 +44,7 @@ render() ─► sim ─────────┘           │       compute p
 - `src/main.ts` — bootstrap and the frame loop. Acquires the device, builds the sidebar, seeds the engine, then drives one `Engine.render()` per animation frame. Resets are coalesced to at most one per frame. Falls back to a failure message if WebGPU cannot be set up.
 - `src/gpu.ts` — the GPU front door. Acquires an adapter and device, and requests the adapter's best compute limits. Throws `GpuError` when WebGPU is unavailable.
 - `src/engine.ts` — owns every device resource: four uniform buffers, the grid and ball storage buffers, three bind group layouts, and five pipelines. `reset()` reallocates the simulation state and seeds it; `render()` encodes one optional compute pass plus one render pass into a single command buffer.
-- `src/sidebar.ts` — `Sidebar` class. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
+- `src/sidebar.ts` — `Sidebar` class. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize. A `Slider` class holds each setting's DOM plumbing and manages slider behavior.
 - `shaders/main.wgsl` — the physics and the renderer, in one module.
 
 ### The one thing to understand before changing the physics

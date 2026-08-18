@@ -100,40 +100,40 @@ fn sim(@builtin(local_invocation_id) id: vec3<u32>) {
 /// Move one ball, bounce it off the walls, and paint the cells it covers.
 /// Balls run concurrently. Conflicts are resolved by last-write-wins.
 fn update_ball(team: u32) {
-    var pos = balls[team].position;
-    var vel = balls[team].velocity;
+  var pos = balls[team].position;
+  var vel = balls[team].velocity;
 
-    // Move, and reverse on whichever axes ran into a wall.
-    let low = vec2(BALL_RADIUS);
-    let high = vec2<f32>(grid_dim) - BALL_RADIUS;
-    let moved = pos + vel;
-    pos = clamp(moved, low, high);
-    vel = select(vel, -vel, (moved < low) | (moved > high));
+  // Move, and reverse on whichever axes ran into a wall.
+  let low = vec2(BALL_RADIUS);
+  let high = vec2<f32>(grid_dim) - BALL_RADIUS;
+  let moved = pos + vel;
+  pos = clamp(moved, low, high);
+  vel = select(vel, -vel, (moved < low) | (moved > high));
 
-    // The collision box is always exactly 2x2. The span [pos - 0.5, pos + 0.5]
-    // is one cell wide, so it straddles exactly two cell boundaries per axis.
-    let first = vec2<u32>(floor(pos - BALL_RADIUS));
-    let last = grid_dim - 1;
-    var bounce = vec2<bool>();
+  // The collision box is always exactly 2x2. The span [pos - 0.5, pos + 0.5]
+  // is one cell wide, so it straddles exactly two cell boundaries per axis.
+  let first = vec2<u32>(floor(pos - BALL_RADIUS));
+  let last = grid_dim - 1;
+  var bounce = vec2<bool>();
 
-    for (var dy = 0u; dy < 2; dy++) {
-        for (var dx = 0u; dx < 2; dx++) {
-            let cell = clamp(first + vec2(dx, dy), vec2(), last);
-            let index = grid_coord_to_index(cell);
+  for (var dy = 0u; dy < 2; dy++) {
+    for (var dx = 0u; dx < 2; dx++) {
+      let cell = clamp(first + vec2(dx, dy), vec2(), last);
+      let index = grid_coord_to_index(cell);
 
-            if atomicLoad(&grid[index]) != team {
-                atomicStore(&grid[index], team);
+      if atomicLoad(&grid[index]) != team {
+        atomicStore(&grid[index], team);
 
-                // Bounce along whichever axis the captured cell lies furthest
-                // along, measured center to center. A perfect diagonal does both.
-                let reach = abs(vec2<f32>(cell) + 0.5 - pos);
-                bounce = bounce | vec2(reach.x >= reach.y, reach.x <= reach.y);
-            }
-        }
+        // Bounce along whichever axis the captured cell lies furthest
+        // along, measured center to center. A perfect diagonal does both.
+        let reach = abs(vec2<f32>(cell) + 0.5 - pos);
+        bounce = bounce | vec2(reach.x >= reach.y, reach.x <= reach.y);
+      }
     }
+  }
 
-    balls[team].position = pos;
-    balls[team].velocity = select(vel, -vel, bounce);
+  balls[team].position = pos;
+  balls[team].velocity = select(vel, -vel, bounce);
 }
 
 // ── Rendering ───────────────────────────────────────────────────────────────

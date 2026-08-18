@@ -1,6 +1,7 @@
 import { Engine, maxGpuSupportedGridSize } from "./engine.js";
-import { requestGpu, GpuError } from "./gpu.js";
+import { requestDevice, configureCanvas, GpuError } from "./gpu.js";
 import { Sidebar } from "./sidebar.js";
+import { CanvasTarget } from "./target.js";
 
 const failure = document.getElementById("failure") as HTMLElement;
 const failureDetail = document.getElementById("failure-detail") as HTMLParagraphElement;
@@ -12,12 +13,21 @@ void start().catch((error) =>
 );
 
 async function start(): Promise<void> {
-  const gpu = await requestGpu(canvas);
+  const device = await requestDevice();
 
-  const gpuMaxGridSize = maxGpuSupportedGridSize(gpu.device);
+  // Losing the GPU device is an unrecoverable error, so alert the user and refresh.
+  void device.lost.then((info) => {
+    console.error("The GPU device was lost", info);
+    alert("The GPU device was lost. The page will refresh to restart the simulation.");
+    location.reload();
+  });
+
+  const { context, format } = configureCanvas(device, canvas);
+
+  const gpuMaxGridSize = maxGpuSupportedGridSize(device);
   const sidebar = new Sidebar(gpuMaxGridSize);
 
-  const engine = new Engine(gpu, canvas);
+  const engine = new Engine(device, new CanvasTarget(device, context, canvas, format));
   engine.reset(sidebar.gridSize, sidebar.gridSize, sidebar.numTeams);
 
   // Slider drags fire faster than frames, so resets coalesce to at most one per frame.

@@ -18,9 +18,10 @@ npm run preview     # Preview production build
 npm run fmt         # Format
 npm run lint        # Lint
 npm run check       # Type-check
+npm run render      # Render frames offscreen to PNG (no GPU or display needed)
 ```
 
-There are no tests. Verifying a change means running the app in a browser — and for shader changes that is the _only_ check. See "Shaders".
+There are no unit tests. Verifying a change means seeing the simulation drawn: either run the app in a browser, or use `npm run render` where no browser window is available. See "Shaders" and "Headless rendering".
 
 ## Architecture
 
@@ -42,7 +43,8 @@ render() ─► sim ─────────┘           │       compute p
 ### Files
 
 - `src/main.ts` — bootstrap and the frame loop. Acquires the device, builds the sidebar, seeds the engine, then drives one `Engine.render()` per animation frame. Resets are coalesced to at most one per frame. Falls back to a failure message if WebGPU cannot be set up.
-- `src/gpu.ts` — the GPU front door. Acquires an adapter and device, and requests the adapter's best compute limits. Throws `GpuError` when WebGPU is unavailable.
+- `src/gpu.ts` — the GPU front door. `requestDevice()` acquires an adapter and device and requests the adapter's best compute limits; `configureCanvas()` sets up presentation. They are separate because a headless run needs the device but no canvas. Throws `GpuError` when WebGPU is unavailable.
+- `src/target.ts` — `RenderTarget`, the surface the engine draws into. `CanvasTarget` presents through a canvas swap chain; `TextureTarget` draws into a plain texture and reads the pixels back. See "Headless rendering".
 - `src/engine.ts` — owns every device resource: four uniform buffers, the grid and ball storage buffers, three bind group layouts, and five pipelines. `reset()` reallocates the simulation state and seeds it; `render()` encodes one optional compute pass plus one render pass into a single command buffer.
 - `src/sidebar.ts` — `Sidebar` class. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize.
 - `shaders/main.wgsl` — the physics and the renderer, in one module.
@@ -67,9 +69,19 @@ Everything lives in one module, `shaders/main.wgsl`, imported by `engine.ts` wit
 
 > If you need separate shaders with module imports in the future, investigate WESL.
 
-**Nothing validates or formats the shader.** `oxfmt` and `oxlint` ignore `.wgsl`, and the build only copies the file into the bundle as a string, so a broken shader passes every automated check and fails at `createShaderModule` when the page loads. After any shader edit, run the app and watch the console.
+**Nothing validates or formats the shader.** `oxfmt` and `oxlint` ignore `.wgsl`, and the build only copies the file into the bundle as a string, so a broken shader passes every automated check and fails at `createShaderModule` when the page loads. After any shader edit, draw the simulation — `npm run dev` in a browser, or `npm run render` — and watch for errors.
 
 Debugging is thin by nature: there is no way to print from a shader. The two techniques that work are copying a storage buffer back to the CPU through a `MAP_READ` staging buffer, and temporarily returning a suspect value as a color from a fragment entry point.
+
+### Headless rendering
+
+`npm run render` draws the simulation to PNG files without a display or a GPU.
+
+WebGPU is a browser API, so this still drives a real Chromium (via Playwright, over the Vite dev server), but it renders into a `TextureTarget` rather than a canvas. That distinction is the whole trick: software WebGPU implementations such as SwiftShader run compute and render pipelines correctly while providing no canvas swap chain, so anything that calls `getCurrentTexture()` fails where an offscreen texture succeeds. Machines with no GPU — CI runners, containers, cloud dev environments — can therefore still verify the renderer.
+
+It runs the same `Engine` and the same `main.wgsl` as the real page, so a shader that breaks here breaks in the browser too. Flags control the image size, grid size, team count, ticks per frame, and frame count; pass `--out` to choose the directory.
+
+The harness lives in `tools/` and is excluded from the production bundle, because Vite builds `index.html` alone.
 
 ### Coordinate space
 

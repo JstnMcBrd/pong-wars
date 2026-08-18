@@ -1,23 +1,19 @@
 /** Raised when the browser or the machine cannot give us a WebGPU device. */
 export class GpuError extends Error {}
 
-/** A live device, its canvas, and the capabilities the rest of the app derives from it. */
-export interface Gpu {
-  readonly device: GPUDevice;
-  readonly context: GPUCanvasContext;
-  readonly format: GPUTextureFormat;
-}
-
 /**
- * Acquire a device and configure `canvas` to present from it.
+ * Acquire a device.
+ *
+ * Deliberately knows nothing about canvases: a headless run needs a device but
+ * no swap chain, and on some software renderers the swap chain is the only part
+ * that fails. See `configureCanvas` for the presenting half.
+ *
  * @throws `GpuError` if WebGPU could not be configured.
  */
-export async function requestGpu(canvas: HTMLCanvasElement): Promise<Gpu> {
+export async function requestDevice(): Promise<GPUDevice> {
   if (!navigator.gpu) {
     throw new GpuError("Your browser does not support WebGPU.");
   }
-
-  const format = navigator.gpu.getPreferredCanvasFormat();
 
   // Prefer the discrete GPU on dual-GPU machines.
   const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
@@ -26,32 +22,44 @@ export async function requestGpu(canvas: HTMLCanvasElement): Promise<Gpu> {
   }
 
   // Request the highest possible limits to optimize workgroup sizes.
-  const device = await adapter.requestDevice({
-    requiredLimits: {
-      maxComputeWorkgroupSizeX: adapter.limits.maxComputeWorkgroupSizeX, // The maximum value of the `workgroup_size` X dimension.
-      maxComputeWorkgroupSizeY: adapter.limits.maxComputeWorkgroupSizeY, // The maximum value of the `workgroup_size` Y dimension.
-      maxComputeInvocationsPerWorkgroup: adapter.limits.maxComputeInvocationsPerWorkgroup, // The maximum value of the product of the `workgroup_size` dimensions.
-    },
-  });
-
-  // Losing the GPU device is an unrecoverable error, so alert the user and refresh.
-  void device.lost.then((info) => {
-    console.error("The GPU device was lost", info);
-    alert("The GPU device was lost. The page will refresh to restart the simulation.");
-    location.reload();
-  });
+  let device: GPUDevice;
+  try {
+    device = await adapter.requestDevice({
+      requiredLimits: {
+        maxComputeWorkgroupSizeX: adapter.limits.maxComputeWorkgroupSizeX, // The maximum value of the `workgroup_size` X dimension.
+        maxComputeWorkgroupSizeY: adapter.limits.maxComputeWorkgroupSizeY, // The maximum value of the `workgroup_size` Y dimension.
+        maxComputeInvocationsPerWorkgroup: adapter.limits.maxComputeInvocationsPerWorkgroup, // The maximum value of the product of the `workgroup_size` dimensions.
+      },
+    });
+  } catch (error) {
+    // An adapter that cannot produce a device is a broken driver, not a missing
+    // one, so report it as a GPU failure rather than letting it escape raw.
+    throw new GpuError(`The GPU driver could not create a device. ${String(error)}`);
+  }
 
   // Surface validation errors that would otherwise be silent.
   device.onuncapturederror = function (event) {
     console.error(event.error);
   };
 
-  // Configure the canvas to present from the device.
+  return device;
+}
+
+/**
+ * Configure `canvas` to present from `device`.
+ * @throws `GpuError` if the canvas could not be configured.
+ */
+export function configureCanvas(
+  device: GPUDevice,
+  canvas: HTMLCanvasElement,
+): { context: GPUCanvasContext; format: GPUTextureFormat } {
+  const format = navigator.gpu.getPreferredCanvasFormat();
+
   const context = canvas.getContext("webgpu");
   if (!context) {
     throw new GpuError("Your browser does not support WebGPU canvases.");
   }
   context.configure({ device, format, alphaMode: "opaque" });
 
-  return { device, context, format };
+  return { context, format };
 }

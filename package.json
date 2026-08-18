@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "fmt": "oxfmt",
     "lint": "oxlint",
-    "check": "tsc --build"
+    "check": "tsc --build",
+    "render": "node tools/render.mjs"
   },
   "dependencies": {
     "lucide": "^1.17.0"
@@ -20,6 +21,7 @@
     "oxfmt": "^0.54.0",
     "oxlint": "^1.69.0",
     "oxlint-tsgolint": "^7.0.2001",
+    "playwright": "^1.62.1",
     "typescript": "^7.0.2",
     "vite": "^8.2.0"
   }

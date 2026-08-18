@@ -1,5 +1,5 @@
 import wgsl from "../shaders/main.wgsl?raw";
-import type { Gpu } from "./gpu.js";
+import type { RenderTarget } from "./target.js";
 
 /** Number of vertices in a quad drawn with triangle strip topology. */
 const QUAD_VERTICES = 4;
@@ -25,8 +25,7 @@ function workgroupCount(items: number, workgroupSize: number): number {
 export class Engine {
   // GPU objects
   private readonly device: GPUDevice;
-  private readonly context: GPUCanvasContext;
-  private readonly canvas: HTMLCanvasElement;
+  private readonly target: RenderTarget;
 
   // Buffers
   private readonly canvasDimBuffer: GPUBuffer;
@@ -61,10 +60,9 @@ export class Engine {
   private numTeams = 2;
   private framesInFlight = 0;
 
-  public constructor(gpu: Gpu, canvas: HTMLCanvasElement) {
-    this.device = gpu.device;
-    this.context = gpu.context;
-    this.canvas = canvas;
+  public constructor(device: GPUDevice, target: RenderTarget) {
+    this.device = device;
+    this.target = target;
 
     // Workgroup size overrides
 
@@ -237,7 +235,7 @@ export class Engine {
       fragment: {
         module: shaderModule,
         entryPoint: "grid_fragment",
-        targets: [{ format: gpu.format }],
+        targets: [{ format: target.format }],
       },
       primitive: { topology: "triangle-strip" },
     });
@@ -249,7 +247,7 @@ export class Engine {
       fragment: {
         module: shaderModule,
         entryPoint: "ball_fragment",
-        targets: [{ format: gpu.format }],
+        targets: [{ format: target.format }],
       },
       primitive: { topology: "triangle-strip" },
     });
@@ -258,25 +256,17 @@ export class Engine {
 
     this.resize();
 
-    new ResizeObserver(() => {
+    this.target.onResize(() => {
       this.resize();
-    }).observe(canvas);
+    });
   }
 
-  /** Match the drawing buffer to the element's display box, at device pixels. */
+  /** Tell the shaders how large the target is now. */
   private resize(): void {
-    const { width, height } = this.canvas.getBoundingClientRect();
-    const maxSize = this.device.limits.maxTextureDimension2D;
-    const clamp = (size: number): number =>
-      Math.max(1, Math.min(Math.round(size * devicePixelRatio), maxSize));
-
-    this.canvas.width = clamp(width);
-    this.canvas.height = clamp(height);
-
     this.device.queue.writeBuffer(
       this.canvasDimBuffer,
       0,
-      new Uint32Array([this.canvas.width, this.canvas.height]),
+      new Uint32Array([this.target.width, this.target.height]),
     );
   }
 
@@ -388,7 +378,7 @@ export class Engine {
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          view: this.context.getCurrentTexture().createView(),
+          view: this.target.currentView(),
           loadOp: "clear",
           storeOp: "store",
           clearValue: { r: 0, g: 0, b: 0, a: 1 },

@@ -23,3 +23,20 @@ More balls, more squares, more speed!
 WebGPU, and a supported graphics device. There is no fallback.
 
 See what your setup supports at [webgpucheck.com](https://webgpucheck.com/).
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+To see the simulation where no browser window is available — a container, a CI
+runner, a cloud dev environment — render frames to PNG instead:
+
+```bash
+npm run render -- --frames 4 --out renders
+```
+
+This needs neither a GPU nor a display. It runs the same engine and shader as
+the app, drawing into an offscreen texture rather than a canvas.

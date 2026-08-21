@@ -9,9 +9,9 @@
 @group(1) @binding(1) var<storage, read_write> balls: array<Ball>;
 
 struct Ball {
-  // Position in grid-space
+  /// Position in grid-space
   position: vec2<f32>,
-  // Velocity in grid-space
+  /// Velocity in grid-space
   velocity: vec2<f32>
 };
 

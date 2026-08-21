@@ -9,9 +9,9 @@
 @group(1) @binding(1) var<storage, read_write> balls: array<Ball>;
 
 struct Ball {
-  // Position in grid-space
+  /// Position in grid-space
   position: vec2<f32>,
-  // Velocity in grid-space
+  /// Velocity in grid-space
   velocity: vec2<f32>
 };
 
@@ -21,9 +21,16 @@ struct Ball {
 /// 0.5 gives a one-cell diameter, which is what keeps the collision box a constant 2x2.
 const BALL_RADIUS = 0.5;
 
-/// Distance a ball moves per tick along each axis. Must be <= 2 * BALL_RADIUS,
-/// or a ball could step over a cell without ever testing it.
-const TICK_DISTANCE = 0.5;
+/// Distance a ball moves per tick along each axis.
+/// Must be <= 2 * BALL_RADIUS, or a ball could skip over cells.
+/// Must not be a unit fraction of 1 (aka 1/N) to avoid resonance / quantized movement.
+/// Must not be too close to a unit fraction of 1 because bounce-clamping will re-quantize it.
+///
+/// Goal: ticks_per_cycle < avg_ticks_per_bounce
+///       ticks_per_cycle = 1 / (1 - TICK_DISTANCE)
+///       avg_ticks_per_bounce depends on ball density (grid_size / num_teams).
+/// Tl;dr - you may need to re-evaluate TICK_DISTANCE if you change the max grid size or number of teams.
+const TICK_DISTANCE = 0.45;
 
 /// Convert a grid coordinate into the grid buffer's row-major index.
 /// Assumes the coordinates are in-bounds.

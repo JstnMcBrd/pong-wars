@@ -92,11 +92,9 @@ Two programs, because the browser code and the config files need different globa
 
 `npm run check` runs `tsc --build`, which type-checks both. Ensure correctness by type-checking after edits.
 
-### Vite base path
+### Static assets
 
-`vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment.
-
-Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically. Hardcoded URL strings in JS/TS are not rewritten and will break under the subpath.
+Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically.
 
 `shaders/main.wgsl` is imported with `?raw` — see "Shaders" above.
 

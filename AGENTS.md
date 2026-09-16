@@ -94,9 +94,9 @@ Two programs, because the browser code and the config files need different globa
 
 ### Vite base path
 
-`vite.config.ts` sets `base: '/pong-wars/'` for GitHub Pages deployment.
+The site is deployed at the root of its own custom domain (`pong-wars.jstnmcbrd.dev`), so `vite.config.ts` uses Vite's default `base` of `/`.
 
-Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically. Hardcoded URL strings in JS/TS are not rewritten and will break under the subpath.
+Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically.
 
 `shaders/main.wgsl` is imported with `?raw` — see "Shaders" above.
 

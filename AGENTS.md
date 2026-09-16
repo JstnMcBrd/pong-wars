@@ -92,9 +92,7 @@ Two programs, because the browser code and the config files need different globa
 
 `npm run check` runs `tsc --build`, which type-checks both. Ensure correctness by type-checking after edits.
 
-### Vite base path
-
-The site is deployed at the root of its own custom domain (`pong-wars.jstnmcbrd.dev`), so `vite.config.ts` uses Vite's default `base` of `/`.
+### Static assets
 
 Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically.
 

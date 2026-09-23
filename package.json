@@ -15,7 +15,7 @@
     "lucide": "^1.17.0"
   },
   "devDependencies": {
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.13.6",
     "@types/web": "^0.0.354",
     "oxfmt": "^0.54.0",
     "oxlint": "^1.69.0",

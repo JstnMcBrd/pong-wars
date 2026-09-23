@@ -7,21 +7,21 @@ const QUAD_VERTICES = 4;
 /** Maximum number of frames the queue may hold at once. */
 const MAX_FRAMES_IN_FLIGHT = 2;
 
-/** @returns the maximum supported grid size for this device. */
+/** @returns the largest grid size that this device can hold. */
 export function maxGpuSupportedGridSize(device: GPUDevice): number {
   const maxGridBytes = Math.min(
-    device.limits.maxBufferSize, // The maximum `size` when creating a GPUBuffer.
-    device.limits.maxStorageBufferBindingSize, // The maximum `size` for storage buffer bindings.
+    device.limits.maxBufferSize, // The maximum size of a GPUBuffer.
+    device.limits.maxStorageBufferBindingSize, // The maximum size of a storage buffer binding.
   );
   return Math.floor(Math.sqrt(maxGridBytes / Uint32Array.BYTES_PER_ELEMENT));
 }
 
-/** @returns number of workgroups needed to give every item its own invocation. */
+/** @returns the number of workgroups that gives each item its own invocation. */
 function workgroupCount(items: number, workgroupSize: number): number {
   return Math.ceil(items / workgroupSize);
 }
 
-/** The whole simulation, start to finish, on the GPU. */
+/** Runs and draws the simulation on the GPU. */
 export class Engine {
   // GPU objects
   private readonly device: GPUDevice;
@@ -66,7 +66,7 @@ export class Engine {
     this.context = gpu.context;
     this.canvas = canvas;
 
-    // Workgroup size overrides
+    // ── Workgroup Sizes ─────────────────────────────────────────────────────
 
     this.initGridWorkgroupSize = Math.min(
       Math.floor(Math.sqrt(this.device.limits.maxComputeInvocationsPerWorkgroup)),
@@ -254,7 +254,7 @@ export class Engine {
       primitive: { topology: "triangle-strip" },
     });
 
-    // ── Start ───────────────────────────────────────────────────────────────
+    // ── Canvas Size ─────────────────────────────────────────────────────────
 
     this.resize();
 
@@ -263,7 +263,7 @@ export class Engine {
     }).observe(canvas);
   }
 
-  /** Match the drawing buffer to the element's display box, at device pixels. */
+  /** Set the canvas drawing buffer to the displayed size of the canvas, in device pixels. */
   private resize(): void {
     const { width, height } = this.canvas.getBoundingClientRect();
     const maxSize = this.device.limits.maxTextureDimension2D;
@@ -280,15 +280,15 @@ export class Engine {
     );
   }
 
-  /** Throw away the current state, paint the starting grid, and place the balls. */
+  /** Discard the current state, paint the starting grid, and place the balls. */
   public reset(cols: number, rows: number, numTeams: number): void {
-    // Update settings buffers
+    // Update the settings buffers
 
     this.device.queue.writeBuffer(this.gridDimBuffer, 0, new Uint32Array([cols, rows]));
     this.device.queue.writeBuffer(this.numTeamsBuffer, 0, new Uint32Array([numTeams]));
     this.numTeams = numTeams;
 
-    // Destroy and recreate the grid/ball buffers (if necessary)
+    // Recreate the grid and ball buffers if their sizes changed
 
     const gridBufferSize = cols * rows * Uint32Array.BYTES_PER_ELEMENT;
     if (this.gridBuffer?.size !== gridBufferSize) {
@@ -313,7 +313,7 @@ export class Engine {
       });
     }
 
-    // Update the bind group for grid/ball buffers
+    // Bind the grid and ball buffers
 
     this.computeBindGroup1 = this.device.createBindGroup({
       label: "@group(1) compute bindings",
@@ -332,7 +332,7 @@ export class Engine {
       ],
     });
 
-    // Run the init compute passes
+    // Seed the grid and the balls
 
     const encoder = this.device.createCommandEncoder();
 
@@ -360,17 +360,17 @@ export class Engine {
    * @returns `true` if the frame was rendered, `false` if the frame was dropped.
    */
   public render(ticks: number): boolean {
-    // Drop frames if the queue is full
+    // Drop the frame if the queue is full
 
     if (this.framesInFlight >= MAX_FRAMES_IN_FLIGHT) {
       return false;
     }
 
-    // Update settings buffers
+    // Update the settings buffers
 
     this.device.queue.writeBuffer(this.numTicksBuffer, 0, new Uint32Array([ticks]));
 
-    // Run simulation pass (if applicable)
+    // Advance the simulation, if there are ticks to run
 
     const encoder = this.device.createCommandEncoder();
 
@@ -379,11 +379,11 @@ export class Engine {
       pass.setPipeline(this.simPipeline);
       pass.setBindGroup(0, this.bindGroup0);
       pass.setBindGroup(1, this.computeBindGroup1);
-      pass.dispatchWorkgroups(1); // Exactly one workgroup, looping over every tick internally.
+      pass.dispatchWorkgroups(1); // Exactly one workgroup, because `storageBarrier()` cannot sync across workgroups.
       pass.end();
     }
 
-    // Run render passes
+    // Draw the grid, then the balls
 
     const pass = encoder.beginRenderPass({
       colorAttachments: [
@@ -409,7 +409,7 @@ export class Engine {
 
     this.device.queue.submit([encoder.finish()]);
 
-    // Track number of frames in queue
+    // Count the frames in the queue
 
     this.framesInFlight++;
     void this.device.queue.onSubmittedWorkDone().then(() => {

@@ -6,7 +6,7 @@
   padding: 0;
 }
 
-/* Prevents display:flex from overriding the hidden attribute */
+/* Stop `display: flex` from overriding the `hidden` attribute */
 [hidden] {
   display: none !important;
 }
@@ -20,7 +20,7 @@
   --panel-h: 14rem; /* panel height when stacked */
   --header-h: 3rem; /* reserved height for the site header (title + links) */
 
-  /* Color palette (dark, default). Overridden for light mode below. */
+  /* Dark color palette (default). The light palette below overrides it. */
   --bg: #0d0d0d;
   --text: #e0e0e0;
   --text-muted: #aaa;
@@ -41,7 +41,7 @@
   );
 }
 
-/* Light palette — follows the browser/OS preference. */
+/* Light color palette, used when the browser or OS prefers light mode. */
 @media (prefers-color-scheme: light) {
   :root {
     color-scheme: light;
@@ -128,8 +128,8 @@ body {
   height: var(--canvas-size);
 }
 
-/* Side-by-side layout: canvas left, panel right, stretched to canvas height.
-   Switches on page aspect ratio — landscape (width ≥ height) goes side-by-side. */
+/* Side-by-side layout for landscape pages (width ≥ height):
+   canvas left, panel right, panel stretched to the canvas height. */
 @media (min-aspect-ratio: 1/1) {
   :root {
     --canvas-size: min(

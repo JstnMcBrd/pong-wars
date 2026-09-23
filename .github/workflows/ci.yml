@@ -1,5 +1,5 @@
 name: CI
-# Formats, lints, checks, and builds the project whenever a pull request is opened or merged
+# Format, lint, type-check, and build the project on each pull request and each push to main
 
 on:
   pull_request:

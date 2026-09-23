@@ -9,31 +9,31 @@
 @group(1) @binding(1) var<storage, read_write> balls: array<Ball>;
 
 struct Ball {
-  /// Position in grid-space
+  /// Position in grid space.
   position: vec2<f32>,
-  /// Velocity in grid-space
+  /// Velocity in grid space.
   velocity: vec2<f32>
 };
 
 // ── Common ──────────────────────────────────────────────────────────────────
 
-/// Ball radius in grid-space units.
-/// 0.5 gives a one-cell diameter, which is what keeps the collision box a constant 2x2.
+/// Ball radius in grid space.
+/// A radius of 0.5 gives a diameter of one cell, which keeps the collision box at 2x2 cells.
 const BALL_RADIUS = 0.5;
 
-/// Distance a ball moves per tick along each axis.
-/// Must be <= 2 * BALL_RADIUS, or a ball could skip over cells.
-/// Must not be a unit fraction of 1 (aka 1/N) to avoid resonance / quantized movement.
-/// Must not be too close to a unit fraction of 1 because bounce-clamping will re-quantize it.
+/// Distance that a ball moves along each axis in one tick.
+/// - Must be <= 2 * BALL_RADIUS, or a ball can skip cells.
+/// - Must not be a unit fraction (1/N), or the movement resonates with the grid and becomes quantized.
+/// - Must not be near a unit fraction, because the wall clamp re-quantizes the movement.
 ///
-/// Goal: ticks_per_cycle < avg_ticks_per_bounce
+/// Goal: ticks_per_cycle < avg_ticks_per_bounce, where:
 ///       ticks_per_cycle = 1 / (1 - TICK_DISTANCE)
 ///       avg_ticks_per_bounce depends on ball density (grid_size / num_teams).
-/// Tl;dr - you may need to re-evaluate TICK_DISTANCE if you change the max grid size or number of teams.
+/// If you change the maximum grid size or the maximum number of teams, re-evaluate TICK_DISTANCE.
 const TICK_DISTANCE = 0.45;
 
-/// Convert a grid coordinate into the grid buffer's row-major index.
-/// Assumes the coordinates are in-bounds.
+/// Convert a grid coordinate to the row-major index in the grid buffer.
+/// Assumes that the coordinate is in bounds.
 fn grid_coord_to_index(coord: vec2<u32>) -> u32 {
   return coord.x + coord.y * grid_dim.x;
 }
@@ -93,32 +93,32 @@ fn init_balls(@builtin(global_invocation_id) id: vec3<u32>) {
 
 override SIM_WORKGROUP_SIZE = 256u;
 
-/// Only 1 workgroup allowed because cross-workgroup synchronization is not supported.
+/// Dispatch exactly one workgroup, because `storageBarrier()` cannot sync across workgroups.
 @compute @workgroup_size(SIM_WORKGROUP_SIZE)
 fn sim(@builtin(local_invocation_id) id: vec3<u32>) {
   for (var tick = 0u; tick < num_ticks; tick++) {
     for (var team = id.x; team < num_teams; team += SIM_WORKGROUP_SIZE) {
       update_ball(team);
     }
-    storageBarrier(); // Sync all invocations before the next tick
+    storageBarrier(); // Wait for all balls to finish this tick
   }
 }
 
-/// Move one ball, bounce it off the walls, and paint the cells it covers.
-/// Balls run concurrently. Conflicts are resolved by last-write-wins.
+/// Move one ball, bounce it off the walls, and paint the cells that it covers.
+/// Balls run concurrently. If two balls paint the same cell, the last write wins.
 fn update_ball(team: u32) {
   var pos = balls[team].position;
   var vel = balls[team].velocity;
 
-  // Move, and reverse on whichever axes ran into a wall.
+  // Move the ball. Reverse the velocity on each axis that hits a wall.
   let low = vec2(BALL_RADIUS);
   let high = vec2<f32>(grid_dim) - BALL_RADIUS;
   let moved = pos + vel;
   pos = clamp(moved, low, high);
   vel = select(vel, -vel, (moved < low) | (moved > high));
 
-  // The collision box is always exactly 2x2. The span [pos - 0.5, pos + 0.5]
-  // is one cell wide, so it straddles exactly two cell boundaries per axis.
+  // The collision box is always 2x2 cells. The span [pos - 0.5, pos + 0.5]
+  // is one cell wide, so it touches two cells on each axis.
   let first = vec2<u32>(floor(pos - BALL_RADIUS));
   let last = grid_dim - 1;
   var bounce = vec2<bool>();
@@ -131,8 +131,8 @@ fn update_ball(team: u32) {
       if atomicLoad(&grid[index]) != team {
         atomicStore(&grid[index], team);
 
-        // Bounce along whichever axis the captured cell lies furthest
-        // along, measured center to center. A perfect diagonal does both.
+        // Bounce on the axis where the captured cell is farthest from the ball,
+        // center to center. On a perfect diagonal, bounce on both axes.
         let reach = abs(vec2<f32>(cell) + 0.5 - pos);
         bounce = bounce | vec2(reach.x >= reach.y, reach.x <= reach.y);
       }
@@ -145,10 +145,10 @@ fn update_ball(team: u32) {
 
 // ── Rendering ───────────────────────────────────────────────────────────────
 
-/// Read-only alias for grid to avoid atomics.
+/// Read-only alias of `grid`, without atomics.
 @group(1) @binding(0) var<storage, read> grid_ro: array<u32>;
 
-/// Read-only alias for balls because @vertex functions can't read writable storage buffers.
+/// Read-only alias of `balls`, because @vertex functions cannot read writable storage buffers.
 @group(1) @binding(1) var<storage, read> balls_ro: array<Ball>;
 
 const MIN_BALL_RADIUS_PX = 2.0;
@@ -189,7 +189,7 @@ const unit_quad = array<vec2<f32>, 4>(
   vec2(1.0, 1.0),
 );
 
-/// The team palette: evenly spaced hues at a fixed saturation and lightness.
+/// The color of a team. Teams get evenly spaced hues at a fixed saturation and lightness.
 fn team_color(team: u32) -> vec4<f32> {
   const SATURATION = 0.70;
   const LIGHTNESS = 0.55;
@@ -221,7 +221,7 @@ fn grid_vertex(@builtin(vertex_index) i: u32) -> GridVertex {
 
 @fragment
 fn grid_fragment(pixel: GridVertex) -> @location(0) vec4<f32> {
-  // Nearest-neighbor sampling and bounds check
+  // Nearest-neighbor sample, clamped to the grid bounds
   let grid_coord = min(
     vec2<u32>(pixel.grid_coord),
     grid_dim - 1,
@@ -236,9 +236,9 @@ struct BallVertex {
   /// @vertex - global clip-space position of the vertex.
   /// @fragment - position of the pixel.
   @builtin(position) pos: vec4<f32>,
-  /// Offset to the center of the ball in local clip space.
-  /// Smoothly interpolated across the quad's pixels automatically,
-  /// and used to determine if a given pixel is within the ball's radius.
+  /// Offset from the center of the ball, in local clip space.
+  /// The rasterizer interpolates this value across the quad,
+  /// so the fragment stage can test if a pixel is inside the ball.
   @location(0) offset: vec2<f32>,
 }
 

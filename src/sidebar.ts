@@ -6,10 +6,10 @@ type SimState = "preview" | "running" | "paused";
 
 // ── Settings ────────────────────────────────────────────────────────────────
 
-/** Largest grid we choose to offer, even if the device could hold more. */
+/** The largest grid size that the slider offers, even if the device can hold a larger grid. */
 const MAX_GRID_SIZE_CAP = 500;
 
-/** The maximum number of teams depends on the current grid size. */
+/** @returns the maximum number of teams for `gridSize`. */
 function maxTeams(gridSize: number): number {
   const circumference = Math.PI * 2 * (gridSize / 4);
   return Math.floor(circumference / 2);
@@ -24,9 +24,9 @@ const FPS_DANGER_THRESHOLD = 30;
 // ── Sidebar class ───────────────────────────────────────────────────────────
 
 /**
- * DOM wrapper for the sidebar panel. Owns the simulation control buttons
- * (start/stop/pause/resume) and the settings sliders (size/teams/speed),
- * tracks the {@link SimState}, and exposes the live setting values.
+ * Controls the sidebar panel: the simulation buttons (start, stop, pause, resume),
+ * the setting sliders (grid size, teams, speed), and the FPS counter.
+ * Tracks the {@link SimState} and exposes the current setting values.
  */
 export class Sidebar {
   private readonly btnStart: HTMLButtonElement;
@@ -74,7 +74,7 @@ export class Sidebar {
       min: 1,
       max: 500,
       default: 1,
-      onInput: () => {}, // Speed affects running speed only; no simulation reset needed.
+      onInput: () => {}, // A speed change does not need a reset.
     });
 
     this.fpsCounter = document.getElementById("fps-counter") as HTMLSpanElement;
@@ -89,7 +89,7 @@ export class Sidebar {
     return this._state;
   }
 
-  // ── DOM-backed setting getters ──────────────────────────────────────────────
+  // ── Setting values ────────────────────────────────────────────────────────
 
   public get gridSize(): number {
     return this.gridSizeSlider.value;
@@ -103,12 +103,12 @@ export class Sidebar {
 
   // ── Public methods ────────────────────────────────────────────────────────
 
-  /** Register a callback invoked whenever the simulation must be (re)initialized. */
+  /** Set the callback to call when the simulation must reset. */
   public onReset(cb: () => void): void {
     this.resetCb = cb;
   }
 
-  /** Record one painted frame. */
+  /** Count one rendered frame for the FPS counter. */
   public recordFrame(): void {
     this.fpsFrameCount++;
   }
@@ -122,13 +122,13 @@ export class Sidebar {
     // Reset the frame count for the next interval
     this.fpsFrameCount = 0;
 
-    // Update appearance
+    // Show the new value
     this.fpsCounter.textContent = `${fps} FPS`;
     this.fpsCounter.classList.toggle("fps-warn", warn);
     this.fpsCounter.classList.toggle("fps-danger", danger);
   }
 
-  // ── State transitions ───────────────────────────────────────────────────────
+  // ── State transitions ─────────────────────────────────────────────────────
 
   private setState(state: SimState): void {
     this._state = state;
@@ -145,7 +145,7 @@ export class Sidebar {
       clearInterval(this.fpsInterval);
     }
 
-    // Lock the reset-required sliders (size, teams) while the simulation is active.
+    // Lock the sliders that need a reset (grid size and teams), except in preview.
     const locked = state !== "preview";
     this.gridSizeSlider.disabled = locked;
     this.numTeamsSlider.disabled = locked;
@@ -176,9 +176,8 @@ export class Sidebar {
 // ── Slider class ────────────────────────────────────────────────────────────
 
 /**
- * DOM wrapper for one labeled range input and its decrement/increment buttons.
- * Finds its own elements by convention, so the four ids stay in agreement:
- * `inp-<id>`, `val-<id>`, `dec-<id>`, `inc-<id>`.
+ * Controls one labeled range input and its decrement and increment buttons.
+ * Finds its elements by these ids: `inp-<id>`, `val-<id>`, `dec-<id>`, `inc-<id>`.
  */
 class Slider {
   private readonly input: HTMLInputElement;
@@ -222,17 +221,16 @@ class Slider {
   public set max(max: number) {
     this.input.max = String(max);
 
-    // The browser automatically clamps the value, so all we need to do is repaint.
+    // The browser clamps the value to the new max, so only the label needs a repaint.
+    // The caller already knows about the change, so `onInput` is not called.
     this.paint();
-
-    // `onInput` does not fire — the caller already knows the setting changed.
   }
 
   public set disabled(disabled: boolean) {
     this.input.disabled = disabled;
   }
 
-  /** Nudge the value by `delta`, clamped to the bounds. */
+  /** Change the value by `delta`, clamped to the slider bounds. */
   private step(delta: number): void {
     const next = Math.min(Math.max(this.value + delta, +this.input.min), +this.input.max);
     if (next === this.value) {
@@ -242,7 +240,7 @@ class Slider {
     this.changed();
   }
 
-  /** Both a slider drag and a step button land here. */
+  /** Handle a value change from a slider drag or a step button. */
   private changed(): void {
     this.paint();
     this.onInput();

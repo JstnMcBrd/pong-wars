@@ -20,7 +20,7 @@ async function start(): Promise<void> {
   const engine = new Engine(gpu, canvas);
   engine.reset(sidebar.gridSize, sidebar.gridSize, sidebar.numTeams);
 
-  // Slider drags fire faster than frames, so resets coalesce to at most one per frame.
+  // A slider drag can request many resets in one frame. Run at most one reset per frame.
   let resetPending = false;
   sidebar.onReset(() => {
     resetPending = true;
@@ -34,7 +34,7 @@ async function start(): Promise<void> {
       engine.reset(sidebar.gridSize, sidebar.gridSize, sidebar.numTeams);
     }
 
-    // A paused or previewing simulation is still drawn, just not advanced.
+    // Draw the simulation in all states, but advance it only while it runs.
     const ticks = sidebar.state === "running" ? sidebar.ticksPerFrame : 0;
     if (engine.render(ticks)) {
       sidebar.recordFrame();
@@ -42,7 +42,7 @@ async function start(): Promise<void> {
   });
 }
 
-/** Replace the app with an explanation. There is no CPU fallback to fall back to. */
+/** Replace the app with a message that tells why WebGPU setup failed. */
 function showGpuError(error: GpuError): void {
   console.error(error);
 

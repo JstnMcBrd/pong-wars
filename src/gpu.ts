@@ -1,7 +1,7 @@
-/** Raised when the browser or the machine cannot give us a WebGPU device. */
+/** Thrown when the browser or the machine cannot provide a WebGPU device. */
 export class GpuError extends Error {}
 
-/** A live device, its canvas, and the capabilities the rest of the app derives from it. */
+/** A WebGPU device, the canvas context that presents from it, and the canvas texture format. */
 export interface Gpu {
   readonly device: GPUDevice;
   readonly context: GPUCanvasContext;
@@ -10,7 +10,7 @@ export interface Gpu {
 
 /**
  * Acquire a device and configure `canvas` to present from it.
- * @throws `GpuError` if WebGPU could not be configured.
+ * @throws a {@link GpuError} if WebGPU setup fails.
  */
 export async function requestGpu(canvas: HTMLCanvasElement): Promise<Gpu> {
   if (!navigator.gpu) {
@@ -25,26 +25,25 @@ export async function requestGpu(canvas: HTMLCanvasElement): Promise<Gpu> {
     throw new GpuError("No WebGPU adapter is available on this machine.");
   }
 
-  // Request the highest possible limits to optimize workgroup sizes.
+  // Request the adapter's highest compute limits, so that workgroups can be as large as possible.
   const requiredLimits = {
-    maxComputeWorkgroupSizeX: adapter.limits.maxComputeWorkgroupSizeX, // The maximum value of the `workgroup_size` X dimension.
-    maxComputeWorkgroupSizeY: adapter.limits.maxComputeWorkgroupSizeY, // The maximum value of the `workgroup_size` Y dimension.
-    maxComputeInvocationsPerWorkgroup: adapter.limits.maxComputeInvocationsPerWorkgroup, // The maximum value of the product of the `workgroup_size` dimensions.
+    maxComputeWorkgroupSizeX: adapter.limits.maxComputeWorkgroupSizeX, // The maximum X dimension of `workgroup_size`.
+    maxComputeWorkgroupSizeY: adapter.limits.maxComputeWorkgroupSizeY, // The maximum Y dimension of `workgroup_size`.
+    maxComputeInvocationsPerWorkgroup: adapter.limits.maxComputeInvocationsPerWorkgroup, // The maximum product of the `workgroup_size` dimensions.
   };
 
-  // Request a device with the required limits.
   const device = await adapter.requestDevice({ requiredLimits }).catch((cause) => {
     throw new GpuError("Your machine could not provide a WebGPU device.", { cause });
   });
 
-  // Losing the GPU device is an unrecoverable error, so alert the user and refresh.
+  // A lost device cannot recover, so tell the user and reload the page.
   void device.lost.then((info) => {
     console.error("The GPU device was lost", info);
     alert("The GPU device was lost. The page will refresh to restart the simulation.");
     location.reload();
   });
 
-  // Surface validation errors that would otherwise be silent.
+  // Log validation errors, which are otherwise silent.
   device.onuncapturederror = function (event) {
     console.error(event.error);
   };

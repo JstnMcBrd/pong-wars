@@ -1,12 +1,12 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents working with code in this repository.
+Guidance for AI coding agents that work in this repository.
 
-Keep `AGENTS.md` and `README.md` up-to-date whenever you modify the project.
+Keep `AGENTS.md` and `README.md` up to date when you change the project.
 
-Note that `AGENTS.md` is a high-level overview. Keep updates brief and conceptual and do not simply restate implementation details. Agents should read the code and comments for more information.
+`AGENTS.md` is a high-level overview. Keep updates brief and conceptual. Leave implementation details to the code and its comments.
 
-High-level descriptions should only be updated when they become inaccurate due to large changes, and your updates should not increase the overall level of detail.
+Update a description only when a large change makes it inaccurate. Do not increase the level of detail.
 
 ## Commands
 
@@ -20,12 +20,11 @@ npm run lint        # Lint
 npm run check       # Type-check
 ```
 
-There are no tests. Verifying a change means running the app in a browser — and for shader changes that is the _only_ check. See "Shaders".
+There are no tests. To verify a change, run the app in a browser. For shader changes, this is the only check (see [Shaders](#shaders)).
 
 ## Architecture
 
-A browser-based multi-ball pong simulation where each ball paints the grid with its team color.
-Both the physics and the rendering run on the GPU through **WebGPU**; the main thread only encodes commands.
+A multi-ball pong simulation in the browser. Each ball paints grid cells with its team color. The physics and the rendering both run on the GPU through **WebGPU**. The main thread only encodes commands.
 
 ### Data flow
 
@@ -33,7 +32,7 @@ Both the physics and the rendering run on the GPU through **WebGPU**; the main t
 reset()  ─► init_grid  ──┐
          ─► init_balls ──┤
                          ▼
-              grid buffer + ball buffer      (never leave the GPU)
+              grid buffer + ball buffer      (stay on the GPU)
                          ▲           │
 render() ─► sim ─────────┘           │       compute pass, skipped while paused
          ─► grid quad + ball quads ◄─┘       render pass
@@ -41,64 +40,69 @@ render() ─► sim ─────────┘           │       compute p
 
 ### Files
 
-- `src/main.ts` — bootstrap and the frame loop. Acquires the device, builds the sidebar, seeds the engine, then drives one `Engine.render()` per animation frame. Resets are coalesced to at most one per frame. Falls back to a failure message if WebGPU cannot be set up.
-- `src/gpu.ts` — the GPU front door. Acquires an adapter and device, and requests the adapter's best compute limits. Throws `GpuError` when WebGPU is unavailable.
-- `src/engine.ts` — owns every device resource: four uniform buffers, the grid and ball storage buffers, three bind group layouts, and five pipelines. `reset()` reallocates the simulation state and seeds it; `render()` encodes one optional compute pass plus one render pass into a single command buffer.
-- `src/sidebar.ts` — `Sidebar` class. Owns the sidebar panel: the simulation control buttons, the settings sliders, and the FPS counter. Tracks the `SimState` (`preview | running | paused`), exposes the live setting values, and fires an `onReset` hook when the simulation must reinitialize. A `Slider` class holds each setting's DOM plumbing and manages slider behavior.
-- `shaders/main.wgsl` — the physics and the renderer, in one module.
+- `src/main.ts` — Bootstrap and frame loop. Gets the GPU, builds the sidebar, and seeds the engine. Then calls `Engine.render()` once per animation frame, with at most one reset per frame. Shows a failure message if WebGPU setup fails.
+- `src/gpu.ts` — Gets a WebGPU adapter and device, with the adapter's highest compute limits. Throws `GpuError` if WebGPU is not available.
+- `src/engine.ts` — Owns all device resources: buffers, bind group layouts, and pipelines. `reset()` reallocates and seeds the simulation state. `render()` encodes an optional compute pass and a render pass into one command buffer.
+- `src/sidebar.ts` — Owns the sidebar panel: control buttons, setting sliders, and FPS counter. Tracks the simulation state (`preview | running | paused`) and exposes the setting values. Calls the `onReset` callback when the simulation must reset. The `Slider` class manages the DOM elements of one setting.
+- `shaders/main.wgsl` — The physics and the renderer, in one module.
 
-### The one thing to understand before changing the physics
+### Sequential ticks
 
-Ticks are strictly sequential, so the only parallelism available is across balls. `sim` is therefore dispatched as a **single workgroup** that loops over every tick internally and calls `storageBarrier()` between them. That barrier only orders writes within one workgroup, so dispatching more than one would read a half-finished tick — `dispatchWorkgroups(1)` is deliberate.
+Read this section before you change the physics.
 
-Within a tick the balls run concurrently, so a ball sees the grid as of the start of the tick rather than mid-tick writes from other balls, and two balls claiming the same cell resolve last-write-wins. **The simulation is not reproducible**, by design.
+Each tick depends on the previous tick, so the only parallelism is across balls. Thus `sim` runs as a **single workgroup** that loops over all ticks and calls `storageBarrier()` between ticks. `storageBarrier()` only orders writes inside one workgroup. With more than one workgroup, some balls read an incomplete tick. Thus `dispatchWorkgroups(1)` is intentional.
+
+Within a tick, the balls run concurrently. A ball does not reliably see the writes that other balls make in the same tick. If two balls claim the same cell, the last write wins. Thus **the simulation is not reproducible**. This is intentional.
 
 ### Bindings
 
-`@group(0)` is the settings — four small uniform buffers, one per setting, created once and never rebuilt. `@group(1)` is the simulation state, reallocated by `reset()` whenever the grid size or team count changes.
+`@group(0)` holds the settings: one small uniform buffer per setting. The engine creates these buffers once.
 
-Read-only aliases are declared for the `@group(1)` buffers to allow the vertex and fragment stages to read them. Two variables may share one binding as long as no single entry point uses both. The compute pipelines bind those buffers through a `storage` layout, the render pipelines through a `read-only-storage` layout, over the same memory.
+`@group(1)` holds the simulation state. `reset()` reallocates these buffers when the grid size or team count changes.
 
-Binding numbers are written out in both the shader and `engine.ts`, and nothing checks that the two agree. After touching either list, read them side by side.
+The shader declares read-only aliases of the `@group(1)` buffers, so that the vertex and fragment stages can read them. Two variables can share a binding if no entry point uses both. The compute pipelines bind the buffers through a `storage` layout. The render pipelines bind the same buffers through a `read-only-storage` layout.
+
+Binding numbers appear in both the shader and `engine.ts`, and nothing checks that they agree. After you change either list, compare the two lists.
 
 ### Shaders
 
-Everything lives in one module, `shaders/main.wgsl`, imported by `engine.ts` with Vite's built-in `?raw`. WGSL has no module system, so one file is what lets the physics and the renderer share declarations.
+All shader code is in `shaders/main.wgsl`. `engine.ts` imports the file with Vite's `?raw` suffix. WGSL has no module system, so one file lets the physics and the renderer share declarations.
 
-> If you need separate shaders with module imports in the future, investigate WESL.
+> If you need separate shader modules with imports, investigate WESL.
 
-**Nothing validates or formats the shader.** `oxfmt` and `oxlint` ignore `.wgsl`, and the build only copies the file into the bundle as a string, so a broken shader passes every automated check and fails at `createShaderModule` when the page loads. After any shader edit, run the app and watch the console.
+**Nothing validates or formats the shader.** `oxfmt` and `oxlint` ignore `.wgsl` files, and the build copies the shader into the bundle as a string. Thus a broken shader passes all automated checks, then fails at `createShaderModule` when the page loads. After each shader edit, run the app and watch the console.
 
-Debugging is thin by nature: there is no way to print from a shader. The two techniques that work are copying a storage buffer back to the CPU through a `MAP_READ` staging buffer, and temporarily returning a suspect value as a color from a fragment entry point.
+A shader cannot print, so debugging is limited. Two methods work:
+
+- Copy a storage buffer back to the CPU through a `MAP_READ` staging buffer.
+- Temporarily return a suspect value as a color from a fragment entry point.
 
 ### Coordinate space
 
-All physics operates in **grid-space** (1 unit = 1 cell). The shaders convert to clip space.
+All physics uses **grid space**, where 1 unit is 1 cell. The shaders convert grid space to clip space.
 
 ### Limits
 
-The grid-size slider's maximum is either the largest buffer the device can hold, or `MAX_GRID_SIZE_CAP` in `sidebar.ts`, whichever is lowest.
+The maximum of the grid-size slider is the lower of two values: the largest grid that the device can hold, and `MAX_GRID_SIZE_CAP` in `sidebar.ts`.
 
-The minimum storage-buffer binding limit every conformant adapter must provide is 128 MB, which could hold a grid of ~5,700². To raise the grid-size limit even higher, a higher `maxStorageBufferBindingSize` would need to be requested in `gpu.ts`, and the grid would have to be split across several bindings.
+Every conformant adapter supports a storage buffer binding of at least 128 MB, which holds a grid of about 5,792². For a larger grid, request a higher `maxStorageBufferBindingSize` in `gpu.ts` and split the grid across several bindings.
 
-Workgroup sizes are not hardcoded. `gpu.ts` requests the adapter's best compute limits, and `engine.ts` derives each workgroup size from them and supplies it as a shader `override`, then derives the dispatch count from that size and the item count. Nothing needs editing when the hardware changes.
+Workgroup sizes are not hardcoded. `gpu.ts` requests the adapter's highest compute limits. `engine.ts` derives each workgroup size from these limits and passes the size to the shader as an `override` constant. Different hardware needs no code edits.
 
 ### TypeScript
 
-Two programs, because the browser code and the config files need different globals.
+There are two TypeScript programs, because the browser code and the config files need different globals:
 
-- `tsconfig.app.json` — `src` (`@types/web` and `vite/client`). It uses `@types/web` in place of the built-in `dom` lib because TypeScript 7.0.2's copy is missing WebGPU's bitflag namespaces. The file explains when to undo that.
-- `tsconfig.node.json` — the root config files (`*.config.ts`, `@types/node`).
+- `tsconfig.app.json` — `src`, with `@types/web` and `vite/client`. It uses `@types/web` instead of the built-in `DOM` lib, because the TypeScript 7.0.2 `DOM` lib does not have WebGPU's bitflag namespaces. The file tells when to undo this.
+- `tsconfig.node.json` — the root config files (`*.config.ts`), with `@types/node`.
 
-`npm run check` runs `tsc --build`, which type-checks both. Ensure correctness by type-checking after edits.
+`npm run check` runs `tsc --build`, which type-checks both programs. Type-check after each edit.
 
 ### Static assets
 
-Reference static assets via `import` or `new URL(…, import.meta.url)` — Vite rewrites those paths automatically.
-
-`shaders/main.wgsl` is imported with `?raw` — see "Shaders" above.
+Reference static assets with `import` or `new URL(…, import.meta.url)`, so that Vite rewrites the paths.
 
 ## Deployment
 
-`.github/workflows/ci.yml` runs checks on every PR and every push to `main`.
-`.github/workflows/cd.yml` deploys to GitHub Pages on every push to `main`.
+- `.github/workflows/ci.yml` runs checks on each pull request and each push to `main`.
+- `.github/workflows/cd.yml` deploys to GitHub Pages on each push to `main`.

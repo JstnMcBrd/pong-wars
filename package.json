@@ -8,19 +8,16 @@
     "build": "vite build",
     "preview": "vite preview",
     "fmt": "oxfmt",
-    "lint": "oxlint",
-    "check": "tsc --build"
+    "check": "oxlint"
   },
   "dependencies": {
     "lucide": "^1.17.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
-    "@types/web": "^0.0.354",
     "oxfmt": "^0.72.0",
-    "oxlint": "^1.92.0",
-    "oxlint-tsgolint": "^7.0.2001",
-    "typescript": "^7.0.2",
+    "oxlint": "^1.93.0",
+    "tsrs": "^0.24.0-ts7.1.0-beta",
     "vite": "^8.3.4"
   }
 }

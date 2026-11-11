@@ -1,5 +1,6 @@
 {
   // Use the language server from the `tsrs` dev dependency.
-  // This path works on macOS and Linux. Windows needs "./node_modules/@tsrs/win32-x64".
+  // FIXME This path only works on macOS and Linux. Windows needs "./node_modules/@tsrs/win32-x64".
+  // Restore one cross-platform setting when tsrs fixes this: https://github.com/oxc-project/tsrs/issues/970
   "js/ts.tsdk.path": "./node_modules/tsrs/tsdk"
 }

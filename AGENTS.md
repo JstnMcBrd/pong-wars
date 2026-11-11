@@ -95,7 +95,7 @@ There are two TypeScript programs, because the browser code and the config files
 - `tsconfig.app.json` — `src`, with the DOM lib and `vite/client`.
 - `tsconfig.node.json` — the root config files (`*.config.ts`), with `@types/node`.
 
-`npm run check` runs `oxlint` with `typeCheck` enabled, so one pass lints and type-checks both programs. The type checker is [`tsrs`](https://github.com/oxc-project/tsrs), a Rust port of the TypeScript compiler. It is the only TypeScript installation: the `typescript` package is not installed. Run `npx tsrs --build` for `tsc`-style output. Run `npm run check` after each edit.
+`npm run check` runs `oxlint` with `typeCheck` enabled, so one pass lints and type-checks both programs. The type checker is [`tsrs`](https://github.com/oxc-project/tsrs), a Rust port of the TypeScript compiler. It is the only TypeScript installation: the `typescript` package is not installed. The editor uses the `tsrs` language server, set up in `.vscode/settings.json`. Run `npx tsrs --build` for `tsc`-style output. Run `npm run check` after each edit.
 
 ### Static assets
 

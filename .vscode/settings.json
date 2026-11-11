@@ -1,0 +1,5 @@
+{
+  // Use the language server from the `tsrs` dev dependency (via the TypeScript 7 extension)
+  "js/ts.experimental.useTsgo": true,
+  "js/ts.tsdk.path": "./node_modules/tsrs/tsdk"
+}

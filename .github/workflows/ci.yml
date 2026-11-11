@@ -1,5 +1,5 @@
 name: CI
-# Format, check (lint and type-check), and build the project on each pull request and each push to main
+# Format, check, and build the project on each pull request and each push to main
 
 on:
   pull_request:

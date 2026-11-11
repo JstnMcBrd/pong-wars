@@ -1,5 +1,5 @@
 {
-  // Use the language server from the `tsrs` dev dependency (via the TypeScript 7 extension)
-  "js/ts.experimental.useTsgo": true,
+  // Use the language server from the `tsrs` dev dependency.
+  // This path works on macOS and Linux. Windows needs "./node_modules/@tsrs/win32-x64".
   "js/ts.tsdk.path": "./node_modules/tsrs/tsdk"
 }

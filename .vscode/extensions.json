@@ -2,7 +2,6 @@
   "recommendations": [
     "github.vscode-github-actions",
     "oxc.oxc-vscode",
-    "typescriptteam.native-preview",
     "wgsl-analyzer.wgsl-analyzer"
   ]
 }

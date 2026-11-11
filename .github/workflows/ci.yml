@@ -1,5 +1,5 @@
 name: CI
-# Format, lint, type-check, and build the project on each pull request and each push to main
+# Format, check, and build the project on each pull request and each push to main
 
 on:
   pull_request:
@@ -34,30 +34,6 @@ jobs:
 
       - name: Format
         run: npm run fmt -- --check
-
-  lint:
-    name: Lint
-
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read # Required for actions/checkout
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Install dependencies
-        run: npm clean-install
-
-      - name: Lint
-        run: npm run lint
 
   check:
     name: Check

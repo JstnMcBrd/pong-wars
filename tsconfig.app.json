@@ -2,14 +2,7 @@
   "extends": "./tsconfig.json",
   "include": ["src"],
   "compilerOptions": {
-    "types": ["@types/web", "vite/client"],
-    "lib": [
-      "ESNext"
-      // The TypeScript 7.0.2 DOM lib does not have WebGPU's bitflag namespaces.
-      // `@types/web`, a newer copy of the same lib, replaces it.
-      // FIXME Restore "DOM" when a TypeScript release includes this fix:
-      // https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/2469
-      // "DOM"
-    ]
+    "types": ["vite/client"],
+    "lib": ["ESNext", "DOM"]
   }
 }

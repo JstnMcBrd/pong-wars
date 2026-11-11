@@ -97,7 +97,9 @@ There are two TypeScript programs, because the browser code and the config files
 
 `npm run check` runs `oxlint` with `typeCheck` enabled, so one pass lints and type-checks both programs. Run it after each edit.
 
-The type checker is [`tsrs`](https://github.com/oxc-project/tsrs), a Rust port of the TypeScript compiler. It is the only TypeScript installation: the `typescript` package is not installed. The editor uses the `tsrs` language server, set up in `.vscode/settings.json`. Run `npx tsrs --build` for `tsc`-style output.
+The type checker is [`tsrs`](https://github.com/oxc-project/tsrs), a Rust port of the TypeScript compiler. Do not install the `typescript` package: `tsrs` is the only TypeScript installation.
+
+The editor uses the `tsrs` language server, set up in `.vscode/settings.json`.
 
 ### Static assets
 

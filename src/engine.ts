@@ -1,4 +1,4 @@
-import wgsl from "../shaders/main.wgsl?raw";
+import wgsl from "../shaders/main.wgsl" with { type: "text" };
 import type { Gpu } from "./gpu.js";
 
 /** Number of vertices in a quad drawn with triangle strip topology. */
@@ -69,7 +69,9 @@ export class Engine {
     // ── Workgroup Sizes ─────────────────────────────────────────────────────
 
     this.initGridWorkgroupSize = Math.min(
-      Math.floor(Math.sqrt(this.device.limits.maxComputeInvocationsPerWorkgroup)),
+      Math.floor(
+        Math.sqrt(this.device.limits.maxComputeInvocationsPerWorkgroup),
+      ),
       this.device.limits.maxComputeWorkgroupSizeX,
       this.device.limits.maxComputeWorkgroupSizeY,
     );
@@ -118,22 +120,34 @@ export class Engine {
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          visibility:
+            GPUShaderStage.COMPUTE |
+            GPUShaderStage.VERTEX |
+            GPUShaderStage.FRAGMENT,
           buffer: { type: "uniform" },
         },
         {
           binding: 1,
-          visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          visibility:
+            GPUShaderStage.COMPUTE |
+            GPUShaderStage.VERTEX |
+            GPUShaderStage.FRAGMENT,
           buffer: { type: "uniform" },
         },
         {
           binding: 2,
-          visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          visibility:
+            GPUShaderStage.COMPUTE |
+            GPUShaderStage.VERTEX |
+            GPUShaderStage.FRAGMENT,
           buffer: { type: "uniform" },
         },
         {
           binding: 3,
-          visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          visibility:
+            GPUShaderStage.COMPUTE |
+            GPUShaderStage.VERTEX |
+            GPUShaderStage.FRAGMENT,
           buffer: { type: "uniform" },
         },
       ],
@@ -284,8 +298,16 @@ export class Engine {
   public reset(cols: number, rows: number, numTeams: number): void {
     // Update the settings buffers
 
-    this.device.queue.writeBuffer(this.gridDimBuffer, 0, new Uint32Array([cols, rows]));
-    this.device.queue.writeBuffer(this.numTeamsBuffer, 0, new Uint32Array([numTeams]));
+    this.device.queue.writeBuffer(
+      this.gridDimBuffer,
+      0,
+      new Uint32Array([cols, rows]),
+    );
+    this.device.queue.writeBuffer(
+      this.numTeamsBuffer,
+      0,
+      new Uint32Array([numTeams]),
+    );
     this.numTeams = numTeams;
 
     // Recreate the grid and ball buffers if their sizes changed
@@ -348,7 +370,9 @@ export class Engine {
     );
 
     pass.setPipeline(this.initBallsPipeline);
-    pass.dispatchWorkgroups(workgroupCount(numTeams, this.initBallsWorkgroupSize));
+    pass.dispatchWorkgroups(
+      workgroupCount(numTeams, this.initBallsWorkgroupSize),
+    );
 
     pass.end();
 
@@ -368,7 +392,11 @@ export class Engine {
 
     // Update the settings buffers
 
-    this.device.queue.writeBuffer(this.numTicksBuffer, 0, new Uint32Array([ticks]));
+    this.device.queue.writeBuffer(
+      this.numTicksBuffer,
+      0,
+      new Uint32Array([ticks]),
+    );
 
     // Advance the simulation, if there are ticks to run
 

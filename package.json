@@ -2,25 +2,16 @@
   "name": "pong-wars",
   "private": true,
   "license": "MIT",
+  "packageManager": "bun@1.4.4-canary.20261111.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "fmt": "oxfmt",
-    "lint": "oxlint",
-    "check": "tsc --build"
+    "dev": "bun index.html",
+    "build": "bun build index.html --outdir dist --production"
   },
   "dependencies": {
     "lucide": "^1.17.0"
   },
   "devDependencies": {
-    "@types/node": "^26.6.6",
-    "@types/web": "^0.0.354",
-    "oxfmt": "^0.72.0",
-    "oxlint": "^1.92.0",
-    "oxlint-tsgolint": "^7.0.2001",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "@types/web": "^0.0.354"
   }
 }

@@ -4,16 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pong Wars</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/src/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="./src/favicon.svg" />
+    <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
     <header id="header">
       <h1>Pong Wars</h1>
       <nav>
-        <a href="https://jstnmcbrd.github.io" target="_blank" rel="noopener">Justin McBride</a>
+        <a href="https://jstnmcbrd.github.io" target="_blank" rel="noopener"
+          >Justin McBride</a
+        >
         <span class="sep">·</span>
-        <a href="https://github.com/JstnMcBrd/pong-wars" target="_blank" rel="noopener">Source</a>
+        <a
+          href="https://github.com/JstnMcBrd/pong-wars"
+          target="_blank"
+          rel="noopener"
+          >Source</a
+        >
       </nav>
     </header>
 
@@ -22,8 +29,11 @@
       <h2>WebGPU required</h2>
       <p id="failure-detail"></p>
       <p>
-        The simulation runs entirely on the GPU. Check what your setup supports at
-        <a href="https://webgpucheck.com/" target="_blank" rel="noopener">webgpucheck.com</a>.
+        The simulation runs entirely on the GPU. Check what your setup supports
+        at
+        <a href="https://webgpucheck.com/" target="_blank" rel="noopener"
+          >webgpucheck.com</a
+        >.
       </p>
     </section>
 
@@ -33,14 +43,22 @@
       <div id="sidebar">
         <div id="controls">
           <!-- Preview state -->
-          <button id="btn-start" aria-label="Play"><i data-lucide="play"></i></button>
+          <button id="btn-start" aria-label="Play">
+            <i data-lucide="play"></i>
+          </button>
 
           <!-- Running state -->
-          <button id="btn-stop" hidden aria-label="Stop"><i data-lucide="square"></i></button>
-          <button id="btn-pause" hidden aria-label="Pause"><i data-lucide="pause"></i></button>
+          <button id="btn-stop" hidden aria-label="Stop">
+            <i data-lucide="square"></i>
+          </button>
+          <button id="btn-pause" hidden aria-label="Pause">
+            <i data-lucide="pause"></i>
+          </button>
 
           <!-- Paused state -->
-          <button id="btn-resume" hidden aria-label="Play"><i data-lucide="play"></i></button>
+          <button id="btn-resume" hidden aria-label="Play">
+            <i data-lucide="play"></i>
+          </button>
 
           <span id="fps-counter" class="setting-label">? FPS</span>
         </div>
@@ -77,11 +95,21 @@
             <span class="setting-value" id="val-num-teams">?</span>
           </label>
           <div class="slider-row">
-            <button class="step-btn" id="dec-num-teams" tabindex="-1" aria-label="Decrease teams">
+            <button
+              class="step-btn"
+              id="dec-num-teams"
+              tabindex="-1"
+              aria-label="Decrease teams"
+            >
               −
             </button>
             <input type="range" id="inp-num-teams" min="?" max="?" value="?" />
-            <button class="step-btn" id="inc-num-teams" tabindex="-1" aria-label="Increase teams">
+            <button
+              class="step-btn"
+              id="inc-num-teams"
+              tabindex="-1"
+              aria-label="Increase teams"
+            >
               +
             </button>
           </div>
@@ -101,7 +129,13 @@
             >
               −
             </button>
-            <input type="range" id="inp-ticks-per-frame" min="?" max="?" value="?" />
+            <input
+              type="range"
+              id="inp-ticks-per-frame"
+              min="?"
+              max="?"
+              value="?"
+            />
             <button
               class="step-btn"
               id="inc-ticks-per-frame"

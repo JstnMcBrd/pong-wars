@@ -12,11 +12,10 @@ Update a description only when a large change makes it inaccurate. Do not increa
 
 ```bash
 bun install         # Install dependencies
-bun index.html      # Dev server
+bun run dev         # Dev server
 bun run build       # Production build
 bun fmt             # Format
-bun lint            # Lint
-bun check           # Type-check
+bun lint            # Lint and type-check
 ```
 
 There are no tests. To verify a change, run the app in a browser. For shader changes, this is the only check (see [Shaders](#shaders)).
@@ -90,17 +89,17 @@ Workgroup sizes are not hardcoded. `gpu.ts` requests the adapter's highest compu
 
 ### Tooling
 
-Bun is the package manager, dev server, bundler, formatter, linter, and type-checker. `bunfig.toml` holds the formatter and linter settings that differ from Bun's defaults. `packageManager` in `package.json` pins the Bun version.
+Bun is the package manager, dev server, bundler, formatter, and linter. The linter also type-checks. `bunfig.toml` holds the formatter and linter settings that differ from Bun's defaults. `packageManager` in `package.json` pins the Bun version.
 
-The Bun version is a canary build because `bun lint` is not in a stable release yet. CI installs it from npm, because `oven-sh/setup-bun` cannot install a pinned canary build.
+The Bun version is a canary build because `bun lint` is not in a stable release yet. CI does not work until a stable release replaces it, because `oven-sh/setup-bun` cannot install a pinned canary build.
 
-`bun fmt`, `bun lint`, and `bun check` are Bun's built-in commands, so `package.json` must not define scripts with those names.
+`bun fmt` and `bun lint` are Bun's built-in commands, so `package.json` must not define scripts with those names.
 
 ### TypeScript
 
-`tsconfig.json` type-checks `src`. It uses `@types/web` instead of the built-in `DOM` lib, because the TypeScript 7.0.2 `DOM` lib does not have WebGPU's bitflag namespaces, and `bun check` bundles TypeScript 7.0.2. The file tells when to undo this.
+`tsconfig.json` type-checks `src`. It uses `@types/web` instead of the built-in `DOM` lib, because the TypeScript 7.0.2 `DOM` lib does not have WebGPU's bitflag namespaces, and Bun bundles TypeScript 7.0.2. The file tells when to undo this.
 
-`src/wgsl.d.ts` declares the type of shader imports. Type-check after each edit.
+`src/wgsl.d.ts` declares the type of shader imports. Lint after each edit, which type-checks.
 
 ### Static assets
 

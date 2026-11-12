@@ -1,6 +1,5 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "include": ["src"],
   "compilerOptions": {
     "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
@@ -15,6 +14,17 @@
 
     "noEmit": true,
 
-    "target": "esnext"
+    "target": "esnext",
+    "types": ["@types/web"],
+    "lib": [
+      "ESNext"
+      // The TypeScript 7.0.2 DOM lib does not have WebGPU's bitflag namespaces.
+      // `bun check` bundles TypeScript 7.0.2.
+      // `@types/web`, a newer copy of the same lib, replaces it.
+      // FIXME Restore "DOM" and remove `@types/web` when `bun check` bundles a
+      // TypeScript release that includes this fix:
+      // https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/2469
+      // "DOM"
+    ]
   }
 }

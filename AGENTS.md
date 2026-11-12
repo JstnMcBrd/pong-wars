@@ -11,13 +11,12 @@ Update a description only when a large change makes it inaccurate. Do not increa
 ## Commands
 
 ```bash
-npm install         # Install dependencies
-npm run dev         # Dev server
-npm run build       # Production build
-npm run preview     # Preview production build
-npm run fmt         # Format
-npm run lint        # Lint
-npm run check       # Type-check
+bun install         # Install dependencies
+bun run dev         # Dev server
+bun run build       # Production build
+bun fmt             # Format
+bun lint            # Lint
+bun check           # Type-check
 ```
 
 There are no tests. To verify a change, run the app in a browser. For shader changes, this is the only check (see [Shaders](#shaders)).
@@ -66,11 +65,11 @@ Binding numbers appear in both the shader and `engine.ts`, and nothing checks th
 
 ### Shaders
 
-All shader code is in `shaders/main.wgsl`. `engine.ts` imports the file with Vite's `?raw` suffix. WGSL has no module system, so one file lets the physics and the renderer share declarations.
+All shader code is in `shaders/main.wgsl`. `engine.ts` imports the file as text, with `with { type: "text" }`. WGSL has no module system, so one file lets the physics and the renderer share declarations.
 
 > If you need separate shader modules with imports, investigate WESL.
 
-**Nothing validates or formats the shader.** `oxfmt` and `oxlint` ignore `.wgsl` files, and the build copies the shader into the bundle as a string. Thus a broken shader passes all automated checks, then fails at `createShaderModule` when the page loads. After each shader edit, run the app and watch the console.
+**Nothing validates or formats the shader.** `bun fmt` and `bun lint` ignore `.wgsl` files, and the build copies the shader into the bundle as a string. Thus a broken shader passes all automated checks, then fails at `createShaderModule` when the page loads. After each shader edit, run the app and watch the console.
 
 A shader cannot print, so debugging is limited. Two methods work:
 
@@ -89,18 +88,21 @@ Every conformant adapter supports a storage buffer binding of at least 128 MB, w
 
 Workgroup sizes are not hardcoded. `gpu.ts` requests the adapter's highest compute limits. `engine.ts` derives each workgroup size from these limits and passes the size to the shader as an `override` constant. Different hardware needs no code edits.
 
+### Tooling
+
+Bun is the package manager, dev server, bundler, formatter, linter, and type-checker. `bunfig.toml` holds the formatter and linter settings that differ from Bun's defaults. `.bun-version` pins the Bun version for CI. It tracks `canary` because `bun lint` is not in a stable release yet.
+
+`bun fmt`, `bun lint`, and `bun check` are Bun's built-in commands, so `package.json` must not define scripts with those names.
+
 ### TypeScript
 
-There are two TypeScript programs, because the browser code and the config files need different globals:
+`tsconfig.json` type-checks `src`. It uses `@types/web` instead of the built-in `DOM` lib, because the TypeScript 7.0.2 `DOM` lib does not have WebGPU's bitflag namespaces, and `bun check` bundles TypeScript 7.0.2. The file tells when to undo this.
 
-- `tsconfig.app.json` — `src`, with `@types/web` and `vite/client`. It uses `@types/web` instead of the built-in `DOM` lib, because the TypeScript 7.0.2 `DOM` lib does not have WebGPU's bitflag namespaces. The file tells when to undo this.
-- `tsconfig.node.json` — the root config files (`*.config.ts`), with `@types/node`.
-
-`npm run check` runs `tsc --build`, which type-checks both programs. Type-check after each edit.
+`src/wgsl.d.ts` declares the type of shader imports. Type-check after each edit.
 
 ### Static assets
 
-Reference static assets with `import` or `new URL(…, import.meta.url)`, so that Vite rewrites the paths.
+Reference static assets with `import` or `new URL(…, import.meta.url)`, so that Bun rewrites the paths. There is no `public/` directory.
 
 ## Deployment
 

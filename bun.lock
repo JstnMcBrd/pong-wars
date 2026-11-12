@@ -1,0 +1,20 @@
+{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "pong-wars",
+      "dependencies": {
+        "lucide": "^1.17.0",
+      },
+      "devDependencies": {
+        "@types/web": "0.0.354",
+      },
+    },
+  },
+  "packages": {
+    "@types/web": ["@types/web@0.0.354", "", {}, "sha512-SlML01ihujhAbw2GS+S9x1pLDWf8AWR3IeGAoR27pf/BTcFRrtRo752IFxHf0rfsLaqpPVLoiittNfOjFfDjQQ=="],
+
+    "lucide": ["lucide@1.72.0", "", {}, "sha512-075vCJzyx+LU3xBzfaHjsvrtbiIvVUjbfsdJCG5rPeXs0O/07aH5cDz1zoWn0acupuffXsN/iG6OkvVqYTGunw=="],
+  }
+}

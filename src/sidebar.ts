@@ -115,7 +115,9 @@ export class Sidebar {
 
   /** Write the accumulated frame count to the FPS counter and reset it. */
   private updateFps(): void {
-    const fps = Math.round(this.fpsFrameCount * (1000 / FPS_UPDATE_INTERVAL_MS));
+    const fps = Math.round(
+      this.fpsFrameCount * (1000 / FPS_UPDATE_INTERVAL_MS),
+    );
     const warn = fps < FPS_WARN_THRESHOLD && fps >= FPS_DANGER_THRESHOLD;
     const danger = fps < FPS_DANGER_THRESHOLD;
 
@@ -139,7 +141,10 @@ export class Sidebar {
 
     if (state === "running") {
       this.fpsFrameCount = 0;
-      this.fpsInterval = setInterval(() => this.updateFps(), FPS_UPDATE_INTERVAL_MS);
+      this.fpsInterval = setInterval(
+        () => this.updateFps(),
+        FPS_UPDATE_INTERVAL_MS,
+      );
     } else {
       this.fpsCounter.textContent = "";
       clearInterval(this.fpsInterval);
@@ -232,7 +237,10 @@ class Slider {
 
   /** Change the value by `delta`, clamped to the slider bounds. */
   private step(delta: number): void {
-    const next = Math.min(Math.max(this.value + delta, +this.input.min), +this.input.max);
+    const next = Math.min(
+      Math.max(this.value + delta, +this.input.min),
+      +this.input.max,
+    );
     if (next === this.value) {
       return;
     }

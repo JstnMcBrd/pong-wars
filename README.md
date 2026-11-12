@@ -14,7 +14,7 @@ More balls, more squares, more speed!
 
 ## Architecture
 
-**App** — TypeScript + Vite, transpiled to pure HTML/CSS/JS for the browser
+**App** — TypeScript + Bun, transpiled to pure HTML/CSS/JS for the browser
 
 **Shaders** — WebGPU WGSL, handles simulation and rendering, runs on the GPU
 

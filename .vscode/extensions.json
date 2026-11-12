@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "github.vscode-github-actions",
+    "oven.bun-vscode",
     "wgsl-analyzer.wgsl-analyzer"
   ]
 }

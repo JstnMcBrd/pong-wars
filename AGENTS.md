@@ -12,7 +12,7 @@ Update a description only when a large change makes it inaccurate. Do not increa
 
 ```bash
 bun install         # Install dependencies
-bun run dev         # Dev server
+bun index.html      # Dev server
 bun run build       # Production build
 bun fmt             # Format
 bun lint            # Lint
@@ -65,7 +65,7 @@ Binding numbers appear in both the shader and `engine.ts`, and nothing checks th
 
 ### Shaders
 
-All shader code is in `shaders/main.wgsl`. `engine.ts` imports the file as text, with `with { type: "text" }`. WGSL has no module system, so one file lets the physics and the renderer share declarations.
+All shader code is in `shaders/main.wgsl`. `engine.ts` imports the file as text. WGSL has no module system, so one file lets the physics and the renderer share declarations.
 
 > If you need separate shader modules with imports, investigate WESL.
 
@@ -90,7 +90,9 @@ Workgroup sizes are not hardcoded. `gpu.ts` requests the adapter's highest compu
 
 ### Tooling
 
-Bun is the package manager, dev server, bundler, formatter, linter, and type-checker. `bunfig.toml` holds the formatter and linter settings that differ from Bun's defaults. `.bun-version` pins the Bun version for CI. It tracks `canary` because `bun lint` is not in a stable release yet.
+Bun is the package manager, dev server, bundler, formatter, linter, and type-checker. `bunfig.toml` holds the formatter and linter settings that differ from Bun's defaults. `packageManager` in `package.json` pins the Bun version.
+
+The Bun version is a canary build because `bun lint` is not in a stable release yet. CI installs it from npm, because `oven-sh/setup-bun` cannot install a pinned canary build.
 
 `bun fmt`, `bun lint`, and `bun check` are Bun's built-in commands, so `package.json` must not define scripts with those names.
 

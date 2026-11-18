@@ -16,8 +16,7 @@ npm run dev         # Dev server
 npm run build       # Production build
 npm run preview     # Preview production build
 npm run fmt         # Format
-npm run lint        # Lint
-npm run check       # Type-check
+npm run check       # Lint and type-check
 ```
 
 There are no tests. To verify a change, run the app in a browser. For shader changes, this is the only check (see [Shaders](#shaders)).
@@ -93,10 +92,14 @@ Workgroup sizes are not hardcoded. `gpu.ts` requests the adapter's highest compu
 
 There are two TypeScript programs, because the browser code and the config files need different globals:
 
-- `tsconfig.app.json` — `src`, with `@types/web` and `vite/client`. It uses `@types/web` instead of the built-in `DOM` lib, because the TypeScript 7.0.2 `DOM` lib does not have WebGPU's bitflag namespaces. The file tells when to undo this.
+- `tsconfig.app.json` — `src`, with the DOM lib and `vite/client`.
 - `tsconfig.node.json` — the root config files (`*.config.ts`), with `@types/node`.
 
-`npm run check` runs `tsc --build`, which type-checks both programs. Type-check after each edit.
+`npm run check` runs `oxlint` with `typeCheck` enabled, so one pass lints and type-checks both programs. Run it after each edit.
+
+The type checker is [`tsrs`](https://github.com/oxc-project/tsrs), a Rust port of the TypeScript compiler. Do not install the `typescript` package: `tsrs` should be the only TypeScript installation.
+
+The editor uses the `tsrs` language server, set up in `.vscode/settings.json`.
 
 ### Static assets
 
@@ -104,5 +107,5 @@ Reference static assets with `import` or `new URL(…, import.meta.url)`, so tha
 
 ## Deployment
 
-- `.github/workflows/ci.yml` runs checks on each pull request and each push to `main`.
+- `.github/workflows/ci.yml` runs format, check, and build on each pull request and each push to `main`.
 - `.github/workflows/cd.yml` deploys to GitHub Pages on each push to `main`.

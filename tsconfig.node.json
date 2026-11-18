@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["*"],
-  "compilerOptions": {
-    "types": ["node"],
-    "lib": ["ESNext"]
-  }
-}

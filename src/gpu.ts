@@ -20,7 +20,9 @@ export async function requestGpu(canvas: HTMLCanvasElement): Promise<Gpu> {
   const format = navigator.gpu.getPreferredCanvasFormat();
 
   // Prefer the discrete GPU on dual-GPU machines.
-  const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
+  const adapter = await navigator.gpu.requestAdapter({
+    powerPreference: "high-performance",
+  });
   if (!adapter) {
     throw new GpuError("No WebGPU adapter is available on this machine.");
   }
@@ -29,17 +31,24 @@ export async function requestGpu(canvas: HTMLCanvasElement): Promise<Gpu> {
   const requiredLimits = {
     maxComputeWorkgroupSizeX: adapter.limits.maxComputeWorkgroupSizeX, // The maximum X dimension of `workgroup_size`.
     maxComputeWorkgroupSizeY: adapter.limits.maxComputeWorkgroupSizeY, // The maximum Y dimension of `workgroup_size`.
-    maxComputeInvocationsPerWorkgroup: adapter.limits.maxComputeInvocationsPerWorkgroup, // The maximum product of the `workgroup_size` dimensions.
+    maxComputeInvocationsPerWorkgroup:
+      adapter.limits.maxComputeInvocationsPerWorkgroup, // The maximum product of the `workgroup_size` dimensions.
   };
 
-  const device = await adapter.requestDevice({ requiredLimits }).catch((cause) => {
-    throw new GpuError("Your machine could not provide a WebGPU device.", { cause });
-  });
+  const device = await adapter
+    .requestDevice({ requiredLimits })
+    .catch((cause) => {
+      throw new GpuError("Your machine could not provide a WebGPU device.", {
+        cause,
+      });
+    });
 
   // A lost device cannot recover, so tell the user and reload the page.
   void device.lost.then((info) => {
     console.error("The GPU device was lost", info);
-    alert("The GPU device was lost. The page will refresh to restart the simulation.");
+    alert(
+      "The GPU device was lost. The page will refresh to restart the simulation.",
+    );
     location.reload();
   });
 

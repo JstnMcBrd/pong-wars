@@ -1,9 +1,11 @@
 import { Engine, maxGpuSupportedGridSize } from "./engine.js";
-import { requestGpu, GpuError } from "./gpu.js";
+import { GpuError, requestGpu } from "./gpu.js";
 import { Sidebar } from "./sidebar.js";
 
 const failure = document.getElementById("failure") as HTMLElement;
-const failureDetail = document.getElementById("failure-detail") as HTMLParagraphElement;
+const failureDetail = document.getElementById(
+  "failure-detail",
+) as HTMLParagraphElement;
 const app = document.getElementById("app") as HTMLElement;
 const canvas = document.getElementById("view") as HTMLCanvasElement;
 

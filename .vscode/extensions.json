@@ -1,7 +1,7 @@
 {
   "recommendations": [
     "github.vscode-github-actions",
-    "oxc.oxc-vscode",
+    "oven.bun-vscode",
     "wgsl-analyzer.wgsl-analyzer"
   ]
 }

@@ -1,0 +1,6 @@
+[fmt]
+sortImports = true
+
+[lint]
+typeAware = true
+typeCheck = true

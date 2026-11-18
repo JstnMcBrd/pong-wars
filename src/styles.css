@@ -37,7 +37,10 @@
   /* Stacked layout (default): canvas above, panel below. */
   --canvas-size: min(
     calc(100vw - 2 * var(--pad)),
-    calc(100dvh - 2 * var(--pad) - var(--header-h) - 2 * var(--gap) - var(--panel-h))
+    calc(
+      100dvh - 2 * var(--pad) - var(--header-h) - 2 * var(--gap) -
+        var(--panel-h)
+    )
   );
 }
 

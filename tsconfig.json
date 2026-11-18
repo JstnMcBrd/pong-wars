@@ -21,8 +21,8 @@
       // The TypeScript 7.0.2 DOM lib does not have WebGPU's bitflag namespaces.
       // `bun check` bundles TypeScript 7.0.2.
       // `@types/web`, a newer copy of the same lib, replaces it.
-      // FIXME Restore "DOM" and remove `@types/web` when `bun check` bundles a
-      // TypeScript release that includes this fix:
+      // FIXME Restore "DOM" and remove `@types/web` when `bun check` bundles
+      // TypeScript 7.1, which includes this fix:
       // https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/2469
       // "DOM"
     ]

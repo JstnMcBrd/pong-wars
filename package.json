@@ -12,15 +12,15 @@
     "check": "tsc --build"
   },
   "dependencies": {
-    "lucide": "^1.17.0"
+    "lucide": "1.17.0"
   },
   "devDependencies": {
-    "@types/node": "^26.6.6",
-    "@types/web": "^0.0.354",
-    "oxfmt": "^0.72.0",
-    "oxlint": "^1.92.0",
-    "oxlint-tsgolint": "^7.0.2001",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "@types/node": "26.6.6",
+    "@types/web": "0.0.354",
+    "oxfmt": "0.72.0",
+    "oxlint": "1.92.0",
+    "oxlint-tsgolint": "7.0.2006",
+    "typescript": "7.0.2",
+    "vite": "8.3.4"
   }
 }
